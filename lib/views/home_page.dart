@@ -12,12 +12,17 @@ class HomePage extends StatelessWidget {
   final TextEditingController campaignNameController = TextEditingController();
   final TextEditingController descriptionController = TextEditingController();
   final TextEditingController linkController = TextEditingController();
-  final RxList<String> links = <String>[].obs;
+  final TextEditingController linkNameController = TextEditingController();
+  final RxList<Map<String, String>> links = <Map<String, String>>[].obs;
 
   void addLink() {
     if (linkController.text.isNotEmpty) {
-      links.add(linkController.text);
+      links.add({
+        'url': linkController.text,
+        'name': linkNameController.text.isEmpty ? '' : linkNameController.text
+      });
       linkController.clear();
+      linkNameController.clear();
     }
   }
 
@@ -50,17 +55,21 @@ class HomePage extends StatelessWidget {
               controller: descriptionController,
               decoration: InputDecoration(labelText: "Description (Optional)"),
             ),
-            Row(
+            Column(
               children: [
-                Expanded(
-                  child: TextField(
-                    controller: linkController,
-                    decoration: InputDecoration(labelText: "Enter Link"),
-                  ),
+                TextField(
+                  controller: linkController,
+                  decoration: InputDecoration(labelText: "Enter Link"),
                 ),
-                IconButton(
-                  icon: Icon(Icons.add),
+                TextField(
+                  controller: linkNameController,
+                  decoration: InputDecoration(labelText: "Link Name (Optional)"),
+                ),
+                SizedBox(height: 10),
+                ElevatedButton.icon(
                   onPressed: addLink,
+                  icon: Icon(Icons.add),
+                  label: Text("Add Link"),
                 ),
               ],
             ),
@@ -69,7 +78,10 @@ class HomePage extends StatelessWidget {
                       .asMap()
                       .entries
                       .map((entry) => ListTile(
-                            title: Text(entry.value),
+                            title: Text(entry.value['url']!),
+                            subtitle: entry.value['name']!.isNotEmpty
+                                ? Text(entry.value['name']!)
+                                : null,
                             trailing: IconButton(
                               icon: Icon(Icons.delete, color: Colors.red),
                               onPressed: () => removeLink(entry.key),
@@ -84,7 +96,7 @@ class HomePage extends StatelessWidget {
                     onPressed: () => campaignController.shortenLinks(
                       campaignNameController.text,
                       descriptionController.text,
-                      links,
+                      links.map((link) => link['url']!).toList(),
                     ),
                     child: Text("Shorten"),
                   )),

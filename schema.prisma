@@ -1,0 +1,166 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// model User {
+//   id        Int      @id @default(autoincrement())
+//   name      String?
+//   username  String   @unique
+//   password  String
+//   createdAt DateTime @default(now())
+
+//   campaigns Campaign[]
+// }
+
+// model Campaign {
+//   id          Int      @id @default(autoincrement())
+//   name        String
+//   description String?
+//   userId      Int
+//   user        User     @relation(fields: [userId], references: [id])
+//   createdAt   DateTime @default(now())
+//   links       Link[]
+// }
+
+
+// model Portfolio {
+//   id          Int      @id @default(autoincrement())
+//   name String
+//   description String
+//   userId      Int
+//   user        User     @relation(fields: [userId], references: [id])
+//   createdAt   DateTime @default(now())
+//   linkId      Int
+//   link Link @relation(fields: [linkId], references: [id])
+
+// }
+
+
+
+
+// model Link {
+//   id          Int      @id @default(autoincrement())
+//   name        String   @default("link")
+//   campaignId  Int // Foreign key to Campaign
+//   originalUrl String // The original long URL
+//   shortUrl    String   @unique // The shortened URL (unique)
+//   createdAt   DateTime @default(now())
+
+//   campaign Campaign @relation(fields: [campaignId], references: [id])
+
+//   analytics Analytics[]
+//   clicks Int @default(0)
+// }
+
+// model Analytics {
+//   id           Int      @id @default(autoincrement())
+//   linkId       Int      
+//   lastAccessed DateTime @default(now())
+//   ipAddress    String
+//   country      String
+//   region       String
+//   city         String
+//   deviceType   String 
+//   browser      String
+//   os           String
+//   updatedAt    DateTime @updatedAt // Tracks last update time
+//   link         Link     @relation(fields: [linkId], references: [id])
+// }
+
+model User {
+  id        Int        @id @default(autoincrement())
+  name      String?
+  username  String     @unique
+  password  String
+  createdAt DateTime   @default(now())
+
+  campaigns  Campaign[]
+  portfolios Portfolio[]
+}
+
+model Campaign {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?
+  userId      Int
+  user        User     @relation(fields: [userId], references: [id])
+  createdAt   DateTime @default(now())
+
+  links       Link[]
+}
+
+model Link {
+  id          Int      @id @default(autoincrement())
+  name        String   @default("link")
+  campaignId  Int      // Foreign key to Campaign
+  originalUrl String   // The original long URL
+  shortUrl    String   @unique // The shortened URL (unique)
+  createdAt   DateTime @default(now())
+
+  campaign    Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  analytics   Analytics[]
+  clicks      Int      @default(0)
+}
+
+
+model Portfolio {
+  id          Int     @id @default(autoincrement())
+  name        String
+  endpoint    String  @unique
+  description String?
+  avatar      String?
+  userId      Int
+  user        User     @relation(fields: [userId], references: [id])
+  createdAt   DateTime @default(now())
+
+  portfolioLinks PortfolioLink[] 
+}
+
+
+model PortfolioLink {
+  id          Int      @id @default(autoincrement())
+  name        String   @default("link")
+  portfolioId Int      // Foreign key to Portfolio
+  originalUrl String   // The original long URL
+  shortUrl    String   @unique // The shortened URL (unique)
+  createdAt   DateTime @default(now())
+
+  portfolio   Portfolio @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
+
+  analytics   Analytics[]
+  clicks      Int      @default(0)
+}
+
+
+
+model Analytics {
+  id          Int      @id @default(autoincrement())
+  linkId      Int?     // Nullable, since it may reference either Link or PortfolioLink
+  portfolioLinkId Int? // New field to reference PortfolioLink
+
+  lastAccessed DateTime @default(now())
+  ipAddress    String
+  country      String?
+  region       String?
+  city         String?
+  deviceType   String?
+  browser      String?
+  os           String?
+  updatedAt    DateTime @updatedAt
+  link         Link?         @relation(fields: [linkId], references: [id])
+  portfolioLink PortfolioLink? @relation(fields: [portfolioLinkId], references: [id])
+
+  @@unique([linkId, portfolioLinkId]) // Ensures a valid reference
+}

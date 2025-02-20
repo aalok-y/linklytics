@@ -10,18 +10,22 @@ import 'controllers/auth_controller.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await SharedPreferences.getInstance();
-  runApp(MyApp());
+  final prefs = await SharedPreferences.getInstance();
+  final savedToken = prefs.getString('token');
+  runApp(MyApp(initialRoute: savedToken != null && savedToken.isNotEmpty ? '/home' : '/login'));
 }
 
 class MyApp extends StatelessWidget {
+  final String initialRoute;
+  MyApp({required this.initialRoute});
+  
   final authController = Get.put(AuthController());
 
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
       debugShowCheckedModeBanner: false,
-      initialRoute: '/login',
+      initialRoute: initialRoute,
       getPages: [
         GetPage(name: '/login', page: () => LoginPage()),
         GetPage(name: '/signup', page: () => SignUpPage()),

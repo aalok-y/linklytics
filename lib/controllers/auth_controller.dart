@@ -1,8 +1,8 @@
-import 'package:flutter/material.dart';
+// import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../api/api_service.dart';
-import '../views/home_page.dart';
+// import '../views/home_page.dart';
 
 class AuthController extends GetxController {
   var isLoading = false.obs;
@@ -65,17 +65,27 @@ class AuthController extends GetxController {
   }
 
   void loadUserSession() async {
-    if (Get.currentRoute == '/login') return; // Don't redirect if already on login
-    
-    final prefs = await SharedPreferences.getInstance();
-    final savedToken = prefs.getString('token');
-    if (savedToken != null && savedToken.isNotEmpty) {
-      token.value = savedToken;
-      if (Get.currentRoute != '/home') {
-        Get.offAllNamed('/home');
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final savedToken = prefs.getString('token');
+      
+      // Update the token value regardless of navigation
+      if (savedToken != null && savedToken.isNotEmpty) {
+        token.value = savedToken;
       }
-    } else if (Get.currentRoute != '/login') {
-      Get.offAllNamed('/login');
+      
+      // Only attempt navigation if GetX is initialized
+      if (Get.isRegistered<GetMaterialApp>()) {
+        if (savedToken == null || savedToken.isEmpty) {
+          if (Get.currentRoute != '/login') {
+            Get.offAllNamed('/login');
+          }
+        } else if (Get.currentRoute != '/home') {
+          Get.offAllNamed('/home');
+        }
+      }
+    } catch (e) {
+      print('Error in loadUserSession: $e');
     }
   }
 
