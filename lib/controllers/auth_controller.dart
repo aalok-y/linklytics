@@ -29,30 +29,53 @@ class AuthController extends GetxController {
   }
 
   void signIn(String email, String password) async {
-    isLoading(true);
-    final response = await ApiService.signIn(email, password);
-    isLoading(false);
-
-    if (response != null) {
-      token.value = response;
-      saveUserSession(response);
-      Get.offAllNamed('/home');
-    } else {
-      Get.snackbar("Error", "Invalid credentials.");
+    try {
+      isLoading(true);
+      final response = await ApiService.signIn(email, password);
+      
+      if (response != null) {
+        token.value = response;
+        await saveUserSession(response);
+        Get.offAllNamed('/home');
+      } else {
+        Get.snackbar("Error", "Invalid credentials.");
+      }
+    } catch (e) {
+      Get.snackbar("Error", "Login failed: ${e.toString()}");
+    } finally {
+      isLoading(false);
     }
   }
 
-  void saveUserSession(String authToken) async {
+  Future<void> saveUserSession(String authToken) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('token', authToken);
+      token.value = authToken; // Ensure token is set in memory
+    } catch (e) {
+      print('Error saving session: $e');
+      throw Exception('Failed to save session');
+    }
+  }
+
+  Future<bool> isLoggedIn() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('token', authToken);
+    final savedToken = prefs.getString('token');
+    return savedToken != null && savedToken.isNotEmpty;
   }
 
   void loadUserSession() async {
+    if (Get.currentRoute == '/login') return; // Don't redirect if already on login
+    
     final prefs = await SharedPreferences.getInstance();
     final savedToken = prefs.getString('token');
-    if (savedToken != null) {
+    if (savedToken != null && savedToken.isNotEmpty) {
       token.value = savedToken;
-      Get.offAllNamed('/home');
+      if (Get.currentRoute != '/home') {
+        Get.offAllNamed('/home');
+      }
+    } else if (Get.currentRoute != '/login') {
+      Get.offAllNamed('/login');
     }
   }
 

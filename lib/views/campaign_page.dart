@@ -1,12 +1,8 @@
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../controllers/auth_controller.dart';
 import '../controllers/campaign_controller.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
-class HomePage extends StatelessWidget {
-  final AuthController authController = Get.find<AuthController>();
+class CampaignPage extends StatelessWidget {
   final CampaignController campaignController = Get.put(CampaignController());
 
   final TextEditingController campaignNameController = TextEditingController();
@@ -28,15 +24,7 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text("Campaign Page"),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.logout),
-            onPressed: authController.logout, // Logout button
-          ),
-        ],
-      ),
+      appBar: AppBar(title: Text("Shorten Links")),
       body: Padding(
         padding: EdgeInsets.all(16),
         child: Column(
