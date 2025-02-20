@@ -129,19 +129,57 @@ class AnalyticsPage extends StatelessWidget {
                   ? Center(child: Text('No timeline data available'))
                   : LineChart(
                       LineChartData(
-                        gridData: FlGridData(show: true),
+                        gridData: FlGridData(
+                          show: true,
+                          drawVerticalLine: true,
+                          horizontalInterval: 1,
+                        ),
                         titlesData: FlTitlesData(
-                          leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: true)),
-                          bottomTitles: AxisTitles(sideTitles: SideTitles(showTitles: true)),
+                          leftTitles: AxisTitles(
+                            sideTitles: SideTitles(
+                              showTitles: true,
+                              interval: 1,
+                              reservedSize: 40,
+                            ),
+                            axisNameWidget: Text('Clicks per Hour'),
+                          ),
+                          bottomTitles: AxisTitles(
+                            sideTitles: SideTitles(
+                              showTitles: true,
+                              interval: 6,
+                              reservedSize: 40,
+                            ),
+                            axisNameWidget: Text('Time (hours)'),
+                          ),
                         ),
                         borderData: FlBorderData(show: true),
+                        minX: 0,
+                        maxX: (controller.timeSeriesData.length - 1).toDouble(),
+                        minY: 0,
+                        maxY: controller.timeSeriesData.isEmpty ? 1 : 
+                             controller.timeSeriesData.map((spot) => spot.y).reduce((a, b) => a > b ? a : b) + 1,
                         lineBarsData: [
                           LineChartBarData(
                             spots: controller.timeSeriesData,
                             isCurved: true,
                             color: Colors.blue,
-                            barWidth: 3,
-                            dotData: FlDotData(show: true),
+                            barWidth: 2,
+                            isStrokeCapRound: true,
+                            dotData: FlDotData(
+                              show: true,
+                              getDotPainter: (spot, percent, barData, index) {
+                                return FlDotCirclePainter(
+                                  radius: 4,
+                                  color: Colors.blue,
+                                  strokeWidth: 1,
+                                  strokeColor: Colors.white,
+                                );
+                              },
+                            ),
+                            belowBarData: BarAreaData(
+                              show: true,
+                              color: Colors.blue.withOpacity(0.2),
+                            ),
                           ),
                         ],
                       ),

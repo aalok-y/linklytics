@@ -260,16 +260,50 @@ class AnalyticsController extends GetxController {
   }
 
   void _processTimeSeriesData() {
+    if (analyticsData.isEmpty) {
+      timeSeriesData.clear();
+      return;
+    }
+
     final sortedData = analyticsData.toList()
       ..sort((a, b) => a.lastAccessed.compareTo(b.lastAccessed));
     
-    timeSeriesData.value = List.generate(
-      sortedData.length,
-      (index) => FlSpot(
-        index.toDouble(),
-        1, // Each point represents one click
-      ),
+    // Group clicks by hour
+    final clicksByHour = <DateTime, int>{};
+    for (var analytics in sortedData) {
+      final hourKey = DateTime(
+        analytics.lastAccessed.year,
+        analytics.lastAccessed.month,
+        analytics.lastAccessed.day,
+        analytics.lastAccessed.hour,
+      );
+      clicksByHour[hourKey] = (clicksByHour[hourKey] ?? 0) + 1;
+    }
+
+    // Create spots for the line chart
+    final spots = <FlSpot>[];
+    final startTime = sortedData.first.lastAccessed;
+    final endTime = sortedData.last.lastAccessed;
+    
+    // Fill in all hours between start and end time
+    var currentHour = DateTime(
+      startTime.year,
+      startTime.month,
+      startTime.day,
+      startTime.hour,
     );
+
+    int index = 0;
+    while (currentHour.isBefore(endTime) || currentHour.isAtSameMomentAs(endTime)) {
+      spots.add(FlSpot(
+        index.toDouble(),
+        (clicksByHour[currentHour] ?? 0).toDouble(),
+      ));
+      currentHour = currentHour.add(Duration(hours: 1));
+      index++;
+    }
+
+    timeSeriesData.value = spots;
   }
 
   Color _getRandomColor(int seed) {
