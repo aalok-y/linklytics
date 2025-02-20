@@ -6,6 +6,7 @@ import 'views/login_page.dart';
 import 'views/signup_page.dart';
 import 'views/home_page.dart';
 import 'views/campaign_page.dart';
+import 'views/analytics_page.dart';
 import 'controllers/auth_controller.dart';
 
 void main() async {
@@ -31,6 +32,7 @@ class MyApp extends StatelessWidget {
         GetPage(name: '/signup', page: () => SignUpPage()),
         GetPage(name: '/home', page: () => HomePage()),
         GetPage(name: '/campaign', page: () => CampaignPage()),
+        GetPage(name: '/analytics', page: () => AnalyticsPage()),
       ],
     );
   }

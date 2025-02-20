@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import '../controllers/auth_controller.dart';
 import '../controllers/campaign_controller.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'analytics_page.dart';
 
 class HomePage extends StatelessWidget {
   final AuthController authController = Get.find<AuthController>();
@@ -30,91 +31,118 @@ class HomePage extends StatelessWidget {
     links.removeAt(index);
   }
 
+  final RxInt currentIndex = 0.obs;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Campaign Page"),
+        title: Obx(() => Text(currentIndex.value == 0 ? 'Create Short Link' : 'Analytics')),
         actions: [
           IconButton(
             icon: Icon(Icons.logout),
-            onPressed: authController.logout, // Logout button
+            onPressed: authController.logout,
           ),
         ],
       ),
-      body: Padding(
-        padding: EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            TextField(
-              controller: campaignNameController,
-              decoration: InputDecoration(labelText: "Campaign Name"),
-            ),
-            TextField(
-              controller: descriptionController,
-              decoration: InputDecoration(labelText: "Description (Optional)"),
-            ),
-            Column(
-              children: [
-                TextField(
-                  controller: linkController,
-                  decoration: InputDecoration(labelText: "Enter Link"),
-                ),
-                TextField(
-                  controller: linkNameController,
-                  decoration: InputDecoration(labelText: "Link Name (Optional)"),
-                ),
-                SizedBox(height: 10),
-                ElevatedButton.icon(
-                  onPressed: addLink,
-                  icon: Icon(Icons.add),
-                  label: Text("Add Link"),
-                ),
-              ],
-            ),
-            Obx(() => Column(
-                  children: links
-                      .asMap()
-                      .entries
-                      .map((entry) => ListTile(
-                            title: Text(entry.value['url']!),
-                            subtitle: entry.value['name']!.isNotEmpty
-                                ? Text(entry.value['name']!)
-                                : null,
-                            trailing: IconButton(
-                              icon: Icon(Icons.delete, color: Colors.red),
-                              onPressed: () => removeLink(entry.key),
-                            ),
-                          ))
-                      .toList(),
-                )),
-            SizedBox(height: 20),
-            Obx(() => campaignController.isLoading.value
-                ? Center(child: CircularProgressIndicator())
-                : ElevatedButton(
-                    onPressed: () => campaignController.shortenLinks(
-                      campaignNameController.text,
-                      descriptionController.text,
-                      links.map((link) => link['url']!).toList(),
-                    ),
-                    child: Text("Shorten"),
-                  )),
-            SizedBox(height: 20),
-            Obx(() => campaignController.shortLinks.isNotEmpty
-                ? Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+      body: Obx(() => IndexedStack(
+        index: currentIndex.value,
+        children: [
+          // Create Short Link Page
+          SingleChildScrollView(
+            child: Padding(
+              padding: EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  TextField(
+                    controller: campaignNameController,
+                    decoration: InputDecoration(labelText: "Campaign Name"),
+                  ),
+                  TextField(
+                    controller: descriptionController,
+                    decoration: InputDecoration(labelText: "Description (Optional)"),
+                  ),
+                  Column(
                     children: [
-                      Text("Shortened Links:", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                      ...campaignController.shortLinks.map((link) => ListTile(
-                            title: Text(link, style: TextStyle(color: Colors.blue)),
-                          )),
+                      TextField(
+                        controller: linkController,
+                        decoration: InputDecoration(labelText: "Enter Link"),
+                      ),
+                      TextField(
+                        controller: linkNameController,
+                        decoration: InputDecoration(labelText: "Link Name (Optional)"),
+                      ),
+                      SizedBox(height: 10),
+                      ElevatedButton.icon(
+                        onPressed: addLink,
+                        icon: Icon(Icons.add),
+                        label: Text("Add Link"),
+                      ),
                     ],
-                  )
-                : Container()),
-          ],
-        ),
-      ),
+                  ),
+                  SizedBox(height: 20),
+                  Obx(() => Column(
+                    children: links
+                        .asMap()
+                        .entries
+                        .map((entry) => ListTile(
+                              title: Text(entry.value['url']!),
+                              subtitle: entry.value['name']!.isNotEmpty
+                                  ? Text(entry.value['name']!)
+                                  : null,
+                              trailing: IconButton(
+                                icon: Icon(Icons.delete, color: Colors.red),
+                                onPressed: () => removeLink(entry.key),
+                              ),
+                            ))
+                        .toList(),
+                  )),
+                  SizedBox(height: 20),
+                  Obx(() => campaignController.isLoading.value
+                      ? Center(child: CircularProgressIndicator())
+                      : ElevatedButton(
+                          onPressed: () => campaignController.shortenLinks(
+                            campaignNameController.text,
+                            descriptionController.text,
+                            links.map((link) => link['url']!).toList(),
+                          ),
+                          child: Text("Shorten"),
+                        )),
+                  SizedBox(height: 20),
+                  Obx(() => campaignController.shortLinks.isNotEmpty
+                      ? Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text("Shortened Links:", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                            ...campaignController.shortLinks.map((link) => ListTile(
+                                  title: Text(link, style: TextStyle(color: Colors.blue)),
+                                )),
+                          ],
+                        )
+                      : Container()),
+                ],
+              ),
+            ),
+          ),
+          // Analytics Page
+          AnalyticsPage(),
+        ],
+      )),
+      bottomNavigationBar: Obx(() => BottomNavigationBar(
+        currentIndex: currentIndex.value,
+        onTap: (index) => currentIndex.value = index,
+        items: [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.link),
+            label: 'Create Link',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.analytics),
+            label: 'Analytics',
+          ),
+        ],
+      )),
     );
   }
 }
