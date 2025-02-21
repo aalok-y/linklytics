@@ -5,33 +5,21 @@ import '../controllers/auth_controller.dart';
 import '../controllers/campaign_controller.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'analytics_page.dart';
+import 'create_portfolio_page.dart';
+import 'create_campaign_page.dart';
 
 class HomePage extends StatelessWidget {
   final AuthController authController = Get.find<AuthController>();
   final CampaignController campaignController = Get.put(CampaignController());
-
-  final TextEditingController campaignNameController = TextEditingController();
-  final TextEditingController descriptionController = TextEditingController();
-  final TextEditingController linkController = TextEditingController();
-  final TextEditingController linkNameController = TextEditingController();
-  final RxList<Map<String, String>> links = <Map<String, String>>[].obs;
-
-  void addLink() {
-    if (linkController.text.isNotEmpty) {
-      links.add({
-        'url': linkController.text,
-        'name': linkNameController.text.isEmpty ? '' : linkNameController.text
-      });
-      linkController.clear();
-      linkNameController.clear();
-    }
-  }
-
-  void removeLink(int index) {
-    links.removeAt(index);
-  }
-
   final RxInt currentIndex = 0.obs;
+
+  void navigateToCreatePortfolio() {
+    Get.to(() => CreatePortfolioPage());
+  }
+
+  void navigateToCreateCampaign() {
+    Get.to(() => CreateCampaignPage());
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -48,79 +36,45 @@ class HomePage extends StatelessWidget {
       body: Obx(() => IndexedStack(
         index: currentIndex.value,
         children: [
-          // Create Short Link Page
-          SingleChildScrollView(
+          // Create Link Options Page
+          Center(
             child: Padding(
               padding: EdgeInsets.all(16),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  TextField(
-                    controller: campaignNameController,
-                    decoration: InputDecoration(labelText: "Campaign Name"),
+                  Text(
+                    'Create New',
+                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                   ),
-                  TextField(
-                    controller: descriptionController,
-                    decoration: InputDecoration(labelText: "Description (Optional)"),
-                  ),
-                  Column(
-                    children: [
-                      TextField(
-                        controller: linkController,
-                        decoration: InputDecoration(labelText: "Enter Link"),
+                  SizedBox(height: 30),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton.icon(
+                      onPressed: navigateToCreateCampaign,
+                      icon: Icon(Icons.add_link),
+                      label: Text('Create Campaign', style: TextStyle(fontSize: 16)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Theme.of(context).primaryColor,
+                        foregroundColor: Colors.white,
                       ),
-                      TextField(
-                        controller: linkNameController,
-                        decoration: InputDecoration(labelText: "Link Name (Optional)"),
-                      ),
-                      SizedBox(height: 10),
-                      ElevatedButton.icon(
-                        onPressed: addLink,
-                        icon: Icon(Icons.add),
-                        label: Text("Add Link"),
-                      ),
-                    ],
+                    ),
                   ),
                   SizedBox(height: 20),
-                  Obx(() => Column(
-                    children: links
-                        .asMap()
-                        .entries
-                        .map((entry) => ListTile(
-                              title: Text(entry.value['url']!),
-                              subtitle: entry.value['name']!.isNotEmpty
-                                  ? Text(entry.value['name']!)
-                                  : null,
-                              trailing: IconButton(
-                                icon: Icon(Icons.delete, color: Colors.red),
-                                onPressed: () => removeLink(entry.key),
-                              ),
-                            ))
-                        .toList(),
-                  )),
-                  SizedBox(height: 20),
-                  Obx(() => campaignController.isLoading.value
-                      ? Center(child: CircularProgressIndicator())
-                      : ElevatedButton(
-                          onPressed: () => campaignController.shortenLinks(
-                            campaignNameController.text,
-                            descriptionController.text,
-                            links.map((link) => link['url']!).toList(),
-                          ),
-                          child: Text("Shorten"),
-                        )),
-                  SizedBox(height: 20),
-                  Obx(() => campaignController.shortLinks.isNotEmpty
-                      ? Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text("Shortened Links:", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                            ...campaignController.shortLinks.map((link) => ListTile(
-                                  title: Text(link, style: TextStyle(color: Colors.blue)),
-                                )),
-                          ],
-                        )
-                      : Container()),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton.icon(
+                      onPressed: navigateToCreatePortfolio,
+                      icon: Icon(Icons.add_box_outlined),
+                      label: Text('Create Portfolio', style: TextStyle(fontSize: 16)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Theme.of(context).primaryColor,
+                        foregroundColor: Colors.white,
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),

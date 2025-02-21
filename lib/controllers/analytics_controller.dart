@@ -306,17 +306,35 @@ class AnalyticsController extends GetxController {
     timeSeriesData.value = spots;
   }
 
+  // Keep track of used colors to ensure unique colors for each section
+  final List<Color> _usedColors = [];
+  final List<Color> _availableColors = [
+    Colors.blue,
+    Colors.red,
+    Colors.green,
+    Colors.orange,
+    Colors.purple,
+    Colors.teal,
+    Colors.pink,
+    Colors.indigo,
+    Colors.cyan,
+    Colors.amber,
+    Colors.deepPurple,
+    Colors.lightBlue,
+  ];
+
   Color _getRandomColor(int seed) {
-    final colors = [
-      Colors.blue,
-      Colors.red,
-      Colors.green,
-      Colors.orange,
-      Colors.purple,
-      Colors.teal,
-      Colors.pink,
-      Colors.indigo,
-    ];
-    return colors[seed % colors.length];
+    if (_usedColors.length >= _availableColors.length) {
+      _usedColors.clear(); // Reset if we've used all colors
+    }
+    
+    // Find first unused color
+    Color color = _availableColors.firstWhere(
+      (c) => !_usedColors.contains(c),
+      orElse: () => _availableColors[0],
+    );
+    
+    _usedColors.add(color);
+    return color;
   }
 }
