@@ -2,40 +2,59 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../api/api_service.dart';
 
-class Campaign {
-  final int id;
-  final String name;
-  final String? description;
+class CampaignLink {
+  final int linkId;
+  final String linkName;
   final String originalUrl;
   final String shortUrl;
-  final DateTime createdAt;
+  final String createdAt;
 
-  Campaign({
-    required this.id,
-    required this.name,
-    this.description,
+  CampaignLink({
+    required this.linkId,
+    required this.linkName,
     required this.originalUrl,
     required this.shortUrl,
     required this.createdAt,
   });
 
+  factory CampaignLink.fromJson(Map<String, dynamic> json) {
+    return CampaignLink(
+      linkId: json['linkId'],
+      linkName: json['linkName'],
+      originalUrl: json['originalUrl'],
+      shortUrl: json['shortUrl'],
+      createdAt: json['createdAt'],
+    );
+  }
+}
+
+class Campaign {
+  final int campaignId;
+  final String campaignName;
+  final List<CampaignLink> links;
+
+  Campaign({
+    required this.campaignId,
+    required this.campaignName,
+    required this.links,
+  });
+
   factory Campaign.fromJson(Map<String, dynamic> json) {
     return Campaign(
-      id: json['id'] as int,
-      name: json['name'] as String,
-      description: json['description'] as String?,
-      originalUrl: json['originalUrl'] as String,
-      shortUrl: json['shortUrl'] as String,
-      createdAt: DateTime.parse(json['createdAt'] as String),
+      campaignId: json['campaignId'],
+      campaignName: json['campaignName'],
+      links: (json['links'] as List)
+          .map((link) => CampaignLink.fromJson(link))
+          .toList(),
     );
   }
 }
 
 class CampaignController extends GetxController {
+  var campaigns = <Campaign>[].obs;
   var isLoading = false.obs;
   var shortLinks = <String>[].obs;
   var campaignId = ''.obs;
-  var campaigns = <Campaign>[].obs;
 
   @override
   void onInit() {
@@ -48,10 +67,17 @@ class CampaignController extends GetxController {
       isLoading(true);
       final response = await ApiService.getCampaigns();
       
-      if (response != null) {
-        campaigns.value = (response['campaigns'] as List)
+      print('Campaign API Response: $response');
+      
+      if (response != null && response['campaigns'] != null) {
+        final campaignsList = (response['campaigns'] as List)
             .map((campaign) => Campaign.fromJson(campaign))
             .toList();
+        print('Parsed Campaigns: ${campaignsList.length}');
+        campaigns.value = campaignsList;
+      } else {
+        print('No campaigns data in response');
+        campaigns.value = [];
       }
     } catch (e) {
       print('Error fetching campaigns: $e');

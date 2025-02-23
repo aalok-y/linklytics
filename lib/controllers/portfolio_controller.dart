@@ -8,8 +8,8 @@ class Portfolio {
   final String? description;
   final String endpoint;
   final String? avatar;
-  final List<Map<String, String>> links;
-  final DateTime createdAt;
+  final String createdAt;
+  final List<PortfolioLink> links;
 
   Portfolio({
     required this.id,
@@ -17,29 +17,58 @@ class Portfolio {
     this.description,
     required this.endpoint,
     this.avatar,
-    required this.links,
     required this.createdAt,
+    required this.links,
   });
 
   factory Portfolio.fromJson(Map<String, dynamic> json) {
     return Portfolio(
-      id: json['id'] as int,
-      name: json['name'] as String,
-      description: json['description'] as String?,
-      endpoint: json['endpoint'] as String,
-      avatar: json['avatar'] as String?,
-      links: (json['links'] as List?)
-          ?.map((link) => Map<String, String>.from(link))
-          .toList() ?? [],
-      createdAt: DateTime.parse(json['createdAt'] as String),
+      id: json['id'],
+      name: json['name'],
+      description: json['description'],
+      endpoint: json['endpoint'],
+      avatar: json['avatar'],
+      createdAt: json['createdAt'],
+      links: (json['links'] as List)
+          .map((link) => PortfolioLink.fromJson(link))
+          .toList(),
+    );
+  }
+}
+
+class PortfolioLink {
+  final int id;
+  final String name;
+  final String originalUrl;
+  final String shortUrl;
+  final int clicks;
+  final String createdAt;
+
+  PortfolioLink({
+    required this.id,
+    required this.name,
+    required this.originalUrl,
+    required this.shortUrl,
+    required this.clicks,
+    required this.createdAt,
+  });
+
+  factory PortfolioLink.fromJson(Map<String, dynamic> json) {
+    return PortfolioLink(
+      id: json['id'],
+      name: json['name'],
+      originalUrl: json['originalUrl'],
+      shortUrl: json['shortUrl'],
+      clicks: json['clicks'],
+      createdAt: json['createdAt'],
     );
   }
 }
 
 class PortfolioController extends GetxController {
-  final isLoading = false.obs;
-  final error = RxString('');
-  final portfolios = <Portfolio>[].obs;
+  var portfolios = <Portfolio>[].obs;
+  var isLoading = false.obs;
+  var error = ''.obs;
 
   @override
   void onInit() {
@@ -54,10 +83,17 @@ class PortfolioController extends GetxController {
       
       final response = await ApiService.getPortfolios();
       
-      if (response != null) {
-        portfolios.value = (response['portfolios'] as List)
+      print('Portfolio API Response: $response');
+      
+      if (response != null && response['portfolios'] != null) {
+        final portfoliosList = (response['portfolios'] as List)
             .map((portfolio) => Portfolio.fromJson(portfolio))
             .toList();
+        print('Parsed Portfolios: ${portfoliosList.length}');
+        portfolios.value = portfoliosList;
+      } else {
+        print('No portfolios data in response');
+        portfolios.value = [];
       }
     } catch (e) {
       print('Error fetching portfolios: $e');
