@@ -105,7 +105,51 @@ class ApiService {
     }
   }
 
+  static Future<Map<String, dynamic>?> getCampaigns() async {
+    final prefs = await SharedPreferences.getInstance();
+    String? token = prefs.getString('token');
 
+    if (token == null) {
+      throw Exception('Not logged in. Please log in first.');
+    }
+
+    final response = await http.get(
+      Uri.parse("$baseUrl/campaigns"),
+      headers: {
+        "Authorization": "Bearer $token",
+        "Content-Type": "application/json",
+      },
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      print('Error fetching campaigns: ${response.body}');
+      return null;
+    }
+  }
+
+  static Future<Map<String, dynamic>?> getPortfolios() async {
+    final prefs = await SharedPreferences.getInstance();
+    String? token = prefs.getString('token');
+
+    if (token == null) {
+      throw Exception('Not logged in. Please log in first.');
+    }
+
+    final response = await http.get(
+      Uri.parse("$baseUrl/portfolios"),
+      headers: {
+        "Authorization": "Bearer $token",
+        "Content-Type": "application/json",
+      },
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      print('Error fetching portfolios: ${response.body}');
+      return null;
+    }
+  }
 }
-
-
