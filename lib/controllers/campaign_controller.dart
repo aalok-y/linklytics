@@ -8,6 +8,7 @@ class CampaignLink {
   final String originalUrl;
   final String shortUrl;
   final String createdAt;
+  final int clicks;
 
   CampaignLink({
     required this.linkId,
@@ -15,6 +16,7 @@ class CampaignLink {
     required this.originalUrl,
     required this.shortUrl,
     required this.createdAt,
+    this.clicks = 0,
   });
 
   factory CampaignLink.fromJson(Map<String, dynamic> json) {
@@ -24,6 +26,7 @@ class CampaignLink {
       originalUrl: json['originalUrl'],
       shortUrl: json['shortUrl'],
       createdAt: json['createdAt'],
+      clicks: json['clicks'] ?? 0,
     );
   }
 }

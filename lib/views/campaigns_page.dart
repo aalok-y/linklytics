@@ -60,11 +60,18 @@ class CampaignsPage extends StatelessWidget {
                                     ),
                                     SizedBox(height: 8),
                                     ...campaign.links.map((link) => Padding(
-                                          padding: EdgeInsets.only(bottom: 8),
+                                          padding: EdgeInsets.only(bottom: 12),
                                           child: Column(
                                             crossAxisAlignment:
                                                 CrossAxisAlignment.start,
                                             children: [
+                                              Text(
+                                                link.linkName,
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                              ),
+                                              SizedBox(height: 4),
                                               Text(
                                                 'Original URL: ${link.originalUrl}',
                                                 style: TextStyle(
@@ -77,6 +84,13 @@ class CampaignsPage extends StatelessWidget {
                                                 style: TextStyle(
                                                   color: Theme.of(context).primaryColor,
                                                   fontWeight: FontWeight.w500,
+                                                ),
+                                              ),
+                                              SizedBox(height: 4),
+                                              Text(
+                                                'Clicks: ${link.clicks}',
+                                                style: TextStyle(
+                                                  color: Colors.grey[600],
                                                 ),
                                               ),
                                             ],
