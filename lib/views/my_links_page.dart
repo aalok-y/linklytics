@@ -39,51 +39,56 @@ class MyLinksPage extends StatelessWidget {
                 SizedBox(height: 40),
                 LayoutBuilder(
                   builder: (context, constraints) {
-                    if (constraints.maxWidth < 600) {
-                      // Vertical layout for small screens
-                      return Column(
-                        children: [
-                          _buildOptionCard(
-                            context,
-                            'View Campaigns',
-                            Icons.campaign,
-                            'Manage and track your campaign links',
-                            () => Get.to(() => CampaignsPage()),
-                          ),
-                          SizedBox(height: 20),
-                          _buildOptionCard(
-                            context,
-                            'View Portfolios',
-                            Icons.work,
-                            'Organize and monitor your portfolio links',
-                            () => Get.to(() => PortfoliosPage()),
-                          ),
-                        ],
-                      );
-                    } else {
-                      // Horizontal layout for larger screens
-                      return Wrap(
-                        spacing: 20,
-                        runSpacing: 20,
-                        alignment: WrapAlignment.center,
-                        children: [
-                          _buildOptionCard(
-                            context,
-                            'View Campaigns',
-                            Icons.campaign,
-                            'Manage and track your campaign links',
-                            () => Get.to(() => CampaignsPage()),
-                          ),
-                          _buildOptionCard(
-                            context,
-                            'View Portfolios',
-                            Icons.work,
-                            'Organize and monitor your portfolio links',
-                            () => Get.to(() => PortfoliosPage()),
-                          ),
-                        ],
-                      );
-                    }
+                    double cardWidth = constraints.maxWidth < 600 
+                        ? constraints.maxWidth 
+                        : (constraints.maxWidth / 2) - 30;
+                    return Container(
+                      width: constraints.maxWidth,
+                      child: constraints.maxWidth < 600
+                          ? Column(
+                              children: [
+                                _buildOptionCard(
+                                  context,
+                                  'View Campaigns',
+                                  Icons.campaign,
+                                  'Manage and track your campaign links',
+                                  () => Get.to(() => CampaignsPage()),
+                                  cardWidth,
+                                ),
+                                SizedBox(height: 20),
+                                _buildOptionCard(
+                                  context,
+                                  'View Portfolios',
+                                  Icons.work,
+                                  'Organize and monitor your portfolio links',
+                                  () => Get.to(() => PortfoliosPage()),
+                                  cardWidth,
+                                ),
+                              ],
+                            )
+                          : Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                _buildOptionCard(
+                                  context,
+                                  'View Campaigns',
+                                  Icons.campaign,
+                                  'Manage and track your campaign links',
+                                  () => Get.to(() => CampaignsPage()),
+                                  cardWidth,
+                                ),
+                                SizedBox(width: 20),
+                                _buildOptionCard(
+                                  context,
+                                  'View Portfolios',
+                                  Icons.work,
+                                  'Organize and monitor your portfolio links',
+                                  () => Get.to(() => PortfoliosPage()),
+                                  cardWidth,
+                                ),
+                              ],
+                            ),
+                    );
                   },
                 ),
                 SizedBox(height: 40),
@@ -96,16 +101,13 @@ class MyLinksPage extends StatelessWidget {
   }
 
   Widget _buildOptionCard(BuildContext context, String title, IconData icon,
-      String description, VoidCallback onTap) {
+      String description, VoidCallback onTap, double width) {
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       child: GestureDetector(
         onTap: onTap,
         child: Container(
-          constraints: BoxConstraints(
-            maxWidth: 280,
-            minWidth: 200,
-          ),
+          width: width,
           padding: EdgeInsets.all(24),
           decoration: BoxDecoration(
             color: Colors.white,
