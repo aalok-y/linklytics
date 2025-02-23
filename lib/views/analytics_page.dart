@@ -25,13 +25,72 @@ class AnalyticsPage extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildDropdowns(),
+              _buildViewToggle(context),
               SizedBox(height: 24),
-              if (controller.selectedLink.value != null) ..._buildCharts(),
+              if (!controller.isPortfolioView.value) ...[
+                _buildDropdowns(),
+                SizedBox(height: 24),
+                if (controller.selectedLink.value != null) ..._buildCharts(),
+              ] else ...[
+                _buildPortfolioDropdown(),
+                SizedBox(height: 24),
+                if (controller.selectedPortfolio.value != null) ..._buildCharts(),
+              ],
             ],
           ),
         );
       }),
+    );
+  }
+
+  Widget _buildViewToggle(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Select Analytics Type',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () => controller.toggleView(false),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: !controller.isPortfolioView.value 
+                          ? Theme.of(context).primaryColor 
+                          : null,
+                      foregroundColor: !controller.isPortfolioView.value 
+                          ? Colors.white
+                          : Theme.of(context).primaryColor,
+                    ),
+                    child: Text('Campaign Analytics'),
+                  ),
+                ),
+                SizedBox(width: 16),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () => controller.toggleView(true),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: controller.isPortfolioView.value 
+                          ? Theme.of(context).primaryColor 
+                          : null,
+                      foregroundColor: controller.isPortfolioView.value 
+                          ? Colors.white
+                          : Theme.of(context).primaryColor,
+                    ),
+                    child: Text('Portfolio Analytics'),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -76,6 +135,44 @@ class AnalyticsPage extends StatelessWidget {
               }).toList(),
               onChanged: controller.onLinkSelected,
             )),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPortfolioDropdown() {
+    return Card(
+      child: Padding(
+        padding: EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Select Portfolio',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 16),
+            Obx(() {
+              print('Building dropdown. Portfolios: ${controller.portfolios.length}'); 
+              print('Selected portfolio: ${controller.selectedPortfolio.value?.name}'); 
+              
+              return DropdownButtonFormField<Portfolio>(
+                value: controller.selectedPortfolio.value,
+                hint: Text('Select a portfolio'),
+                isExpanded: true,
+                items: controller.portfolios.map((portfolio) {
+                  return DropdownMenuItem(
+                    value: portfolio,
+                    child: Text(portfolio.name),
+                  );
+                }).toList(),
+                onChanged: (portfolio) {
+                  print('Dropdown onChanged: ${portfolio?.name}'); 
+                  controller.onPortfolioSelected(portfolio);
+                },
+              );
+            }),
           ],
         ),
       ),
@@ -263,17 +360,28 @@ class AnalyticsPage extends StatelessWidget {
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 16),
-            Container(
-              height: 300,
-              child: controller.deviceData.isEmpty
-                  ? Center(child: Text('No device data available'))
-                  : PieChart(
-                      PieChartData(
-                        sections: controller.deviceData,
-                        sectionsSpace: 2,
-                        centerSpaceRadius: 0,
-                      ),
-                    ),
+            SizedBox(
+              height: 200,
+              child: PieChart(
+                PieChartData(
+                  sections: controller.deviceData,
+                  sectionsSpace: 2,
+                  centerSpaceRadius: 40,
+                ),
+              ),
+            ),
+            SizedBox(height: 16),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: controller.analyticsData
+                  .map((analytics) => analytics.device ?? 'Unknown')
+                  .toSet()
+                  .map((device) => Chip(
+                        label: Text(device),
+                        backgroundColor: Colors.blue.withOpacity(0.1),
+                      ))
+                  .toList(),
             ),
           ],
         ),
@@ -386,20 +494,17 @@ class AnalyticsPage extends StatelessWidget {
             ...controller.analyticsData.map((analytics) => Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                ListTile(
-                  title: Text('Access Details', style: TextStyle(fontWeight: FontWeight.bold)),
-                  subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Time: ${analytics.lastAccessed.toLocal()}'),
-                      Text('Location: ${analytics.city}, ${analytics.region}, ${analytics.country}'),
-                      Text('Device: ${analytics.deviceType}'),
-                      Text('Browser: ${analytics.browser}'),
-                      Text('OS: ${analytics.os}'),
-                    ],
-                  ),
-                ),
                 Divider(),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Time: ${analytics.lastAccessed.toLocal()}'),
+                    Text('Location: ${analytics.city ?? "Unknown"}, ${analytics.region ?? "Unknown"}, ${analytics.country ?? "Unknown"}'),
+                    Text('Device: ${analytics.device ?? "Unknown"}'),
+                    Text('Browser: ${analytics.browser ?? "Unknown"}'),
+                    Text('OS: ${analytics.os ?? "Unknown"}'),
+                  ],
+                ),
               ],
             )).toList(),
           ],

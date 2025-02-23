@@ -49,40 +49,74 @@ class Link {
   }
 }
 
+class Portfolio {
+  final int id;
+  final String name;
+  final List<Analytics> analytics;
+
+  Portfolio({
+    required this.id,
+    required this.name,
+    required this.analytics,
+  });
+
+  factory Portfolio.fromJson(Map<String, dynamic> json) {
+    return Portfolio(
+      id: json['portfolioId'] as int,
+      name: json['portfolioName'] as String,
+      analytics: (json['analytics'] as List? ?? [])
+          .map((a) => Analytics.fromJson(a))
+          .toList(),
+    );
+  }
+
+  @override
+  String toString() => name; // For dropdown display
+}
+
 class Analytics {
   final int id;
-  final int linkId;
+  final int? linkId;
+  final int? portfolioLinkId;
   final DateTime lastAccessed;
-  final String country;
-  final String region;
-  final String city;
-  final String deviceType;
-  final String browser;
-  final String os;
+  final String? ipAddress;
+  final String? country;
+  final String? region;
+  final String? city;
+  final String? device;  
+  final String? browser;
+  final String? os;
+  final DateTime updatedAt;
 
   Analytics({
     required this.id,
-    required this.linkId,
+    this.linkId,
+    this.portfolioLinkId,
     required this.lastAccessed,
-    required this.country,
-    required this.region,
-    required this.city,
-    required this.deviceType,
-    required this.browser,
-    required this.os,
+    this.ipAddress,
+    this.country,
+    this.region,
+    this.city,
+    this.device,
+    this.browser,
+    this.os,
+    required this.updatedAt,
   });
 
   factory Analytics.fromJson(Map<String, dynamic> json) {
     return Analytics(
-      id: json['id'],
-      linkId: json['linkId'],
-      lastAccessed: DateTime.parse(json['lastAccessed']),
-      country: json['country'],
-      region: json['region'],
-      city: json['city'],
-      deviceType: json['deviceType'],
-      browser: json['browser'],
-      os: json['os'],
+      id: json['id'] as int,
+      linkId: json['linkId'] as int?,
+      portfolioLinkId: json['portfolioLinkId'] as int?,
+      lastAccessed: DateTime.parse(json['lastAccessed'] as String),
+      ipAddress: json['ipAddress'] as String?,
+      country: json['country'] as String?,
+      region: json['region'] as String?,
+      city: json['city'] as String?,
+      device: json['deviceType'] as String?,  
+      browser: json['browser'] as String?,
+      os: json['os'] as String?,
+      updatedAt: DateTime.parse(json['updatedAt'] as String),
     );
   }
 }
@@ -90,9 +124,12 @@ class Analytics {
 class AnalyticsController extends GetxController {
   var isLoading = true.obs;
   var campaigns = <Campaign>[].obs;
+  var portfolios = <Portfolio>[].obs;
   var selectedCampaign = Rxn<Campaign>();
   var selectedLink = Rxn<Link>();
+  var selectedPortfolio = Rxn<Portfolio>();
   var analyticsData = <Analytics>[].obs;
+  var isPortfolioView = false.obs;
 
   // Chart data
   var browserData = <PieChartSectionData>[].obs;
@@ -133,6 +170,39 @@ class AnalyticsController extends GetxController {
     }
   }
 
+  Future<void> fetchPortfolios() async {
+    try {
+      isLoading(true);
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('token');
+      
+      final response = await http.get(
+        Uri.parse('http://localhost:8000/api/v1/portfolios/analytics'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      print('Portfolio response status: ${response.statusCode}');
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        portfolios.value = (data['analytics'] as List)
+            .map((portfolio) => Portfolio.fromJson(portfolio))
+            .toList();
+        print('Fetched portfolios: ${portfolios.length}');
+      } else {
+        print('Failed to fetch portfolios: ${response.statusCode}');
+        Get.snackbar('Error', 'Failed to fetch portfolios');
+      }
+    } catch (e) {
+      print('Error fetching portfolios: $e');
+      Get.snackbar('Error', 'Failed to fetch portfolios');
+    } finally {
+      isLoading(false);
+    }
+  }
+
   void onCampaignSelected(Campaign? campaign) {
     selectedCampaign.value = campaign;
     selectedLink.value = null;
@@ -144,6 +214,23 @@ class AnalyticsController extends GetxController {
     selectedLink.value = link;
     if (link != null) {
       fetchAnalytics(link.id);
+    } else {
+      analyticsData.clear();
+      _clearChartData();
+    }
+  }
+
+  void onPortfolioSelected(Portfolio? portfolio) {
+    print('Selected portfolio: ${portfolio?.name}');
+    selectedPortfolio.value = portfolio;
+    if (portfolio != null) {
+      analyticsData.value = portfolio.analytics;
+      if (analyticsData.isNotEmpty) {
+        _processAnalyticsData();
+      } else {
+        _clearChartData();
+        Get.snackbar('Info', 'No analytics data available for this portfolio');
+      }
     } else {
       analyticsData.clear();
       _clearChartData();
@@ -201,46 +288,25 @@ class AnalyticsController extends GetxController {
     final osCounts = <String, int>{};
     
     for (var analytics in analyticsData) {
-      browserCounts[analytics.browser] = (browserCounts[analytics.browser] ?? 0) + 1;
-      osCounts[analytics.os] = (osCounts[analytics.os] ?? 0) + 1;
+      var browser = analytics.browser?.trim().isEmpty == true ? 'Unknown' : (analytics.browser ?? 'Unknown');
+      var os = analytics.os?.trim().isEmpty == true ? 'Unknown' : (analytics.os ?? 'Unknown');
+      
+      browserCounts[browser] = (browserCounts[browser] ?? 0) + 1;
+      osCounts[os] = (osCounts[os] ?? 0) + 1;
     }
     
     browserData.value = _createPieChartData(browserCounts);
     osData.value = _createPieChartData(osCounts);
   }
 
-  List<PieChartSectionData> _createPieChartData(Map<String, int> data) {
-    final total = data.values.reduce((a, b) => a + b);
-    return data.entries.map((entry) {
-      final percentage = (entry.value / total * 100).toStringAsFixed(1);
-      return PieChartSectionData(
-        title: '${entry.key}\n$percentage%',
-        value: entry.value.toDouble(),
-        color: _getRandomColor(entry.key.hashCode),
-        radius: 100,
-        titleStyle: TextStyle(color: Colors.white, fontSize: 14),
-        showTitle: true,
-      );
-    }).toList();
-  }
-
   void _processDeviceData() {
     final deviceCounts = <String, int>{};
     for (var analytics in analyticsData) {
-      deviceCounts[analytics.deviceType] = (deviceCounts[analytics.deviceType] ?? 0) + 1;
+      var device = analytics.device?.trim().isEmpty == true ? 'Unknown' : (analytics.device ?? 'Unknown');
+      deviceCounts[device] = (deviceCounts[device] ?? 0) + 1;
     }
     
-    deviceData.value = deviceCounts.entries.map((entry) {
-      final total = deviceCounts.values.reduce((a, b) => a + b);
-      final percentage = (entry.value / total * 100).toStringAsFixed(1);
-      return PieChartSectionData(
-        title: '${entry.key}\n$percentage%',
-        value: entry.value.toDouble(),
-        color: _getRandomColor(entry.key.hashCode),
-        radius: 100,
-        titleStyle: TextStyle(color: Colors.white, fontSize: 14),
-      );
-    }).toList();
+    deviceData.value = _createPieChartData(deviceCounts);
   }
 
   void _processLocationData() {
@@ -249,9 +315,13 @@ class AnalyticsController extends GetxController {
     final cityCounts = <String, int>{};
     
     for (var analytics in analyticsData) {
-      countryCounts[analytics.country] = (countryCounts[analytics.country] ?? 0) + 1;
-      regionCounts[analytics.region] = (regionCounts[analytics.region] ?? 0) + 1;
-      cityCounts[analytics.city] = (cityCounts[analytics.city] ?? 0) + 1;
+      var country = analytics.country?.trim().isEmpty == true ? 'Unknown' : (analytics.country ?? 'Unknown');
+      var region = analytics.region?.trim().isEmpty == true ? 'Unknown' : (analytics.region ?? 'Unknown');
+      var city = analytics.city?.trim().isEmpty == true ? 'Unknown' : (analytics.city ?? 'Unknown');
+      
+      countryCounts[country] = (countryCounts[country] ?? 0) + 1;
+      regionCounts[region] = (regionCounts[region] ?? 0) + 1;
+      cityCounts[city] = (cityCounts[city] ?? 0) + 1;
     }
     
     countryData.value = _createPieChartData(countryCounts);
@@ -306,6 +376,22 @@ class AnalyticsController extends GetxController {
     timeSeriesData.value = spots;
   }
 
+  void toggleView(bool isPortfolio) async {
+    isPortfolioView.value = isPortfolio;
+    _clearChartData();
+    analyticsData.clear();
+    selectedCampaign.value = null;
+    selectedLink.value = null;
+    selectedPortfolio.value = null;
+    
+    if (isPortfolio) {
+      await fetchPortfolios();
+      if (portfolios.isEmpty) {
+        Get.snackbar('Info', 'No portfolios available');
+      }
+    }
+  }
+
   // Keep track of used colors to ensure unique colors for each section
   final List<Color> _usedColors = [];
   final List<Color> _availableColors = [
@@ -336,5 +422,20 @@ class AnalyticsController extends GetxController {
     
     _usedColors.add(color);
     return color;
+  }
+
+  List<PieChartSectionData> _createPieChartData(Map<String, int> data) {
+    final total = data.values.reduce((a, b) => a + b);
+    return data.entries.map((entry) {
+      final percentage = (entry.value / total * 100).toStringAsFixed(1);
+      return PieChartSectionData(
+        title: '${entry.key}\n$percentage%',
+        value: entry.value.toDouble(),
+        color: _getRandomColor(entry.key.hashCode),
+        radius: 100,
+        titleStyle: TextStyle(color: Colors.white, fontSize: 14),
+        showTitle: true,
+      );
+    }).toList();
   }
 }
