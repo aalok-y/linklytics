@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:fl_chart/fl_chart.dart';
-import '../controllers/analytics_controller.dart';
+import '../controllers/analytics_controller.dart' as analytics;
+import 'package:logging/logging.dart';
+
+final _logger = Logger('AnalyticsPage');
 
 class AnalyticsPage extends StatelessWidget {
-  AnalyticsPage({Key? key}) : super(key: key);
+  AnalyticsPage({super.key});
   
-  final controller = Get.put(AnalyticsController());
+  final controller = Get.put(analytics.AnalyticsController());
 
   @override
   Widget build(BuildContext context) {
@@ -106,35 +109,49 @@ class AnalyticsPage extends StatelessWidget {
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 16),
-            Obx(() => DropdownButtonFormField<Campaign>(
-              decoration: InputDecoration(
-                labelText: 'Campaign',
-                border: OutlineInputBorder(),
-              ),
-              value: controller.selectedCampaign.value,
-              items: controller.campaigns.map((campaign) {
-                return DropdownMenuItem(
-                  value: campaign,
-                  child: Text(campaign.name),
-                );
-              }).toList(),
-              onChanged: controller.onCampaignSelected,
-            )),
+            Obx(() {
+              final selectedCampaign = controller.selectedCampaign.value;
+              return DropdownButtonFormField<analytics.Campaign>(
+                value: selectedCampaign,
+                decoration: const InputDecoration(
+                  labelText: 'Select Campaign',
+                  border: OutlineInputBorder(),
+                ),
+                items: controller.campaigns.map<DropdownMenuItem<analytics.Campaign>>((campaign) {
+                  return DropdownMenuItem<analytics.Campaign>(
+                    value: campaign,
+                    child: Text(campaign.name),
+                  );
+                }).toList(),
+                onChanged: (campaign) {
+                  controller.onCampaignSelected(campaign);
+                },
+              );
+            }),
             SizedBox(height: 16),
-            Obx(() => DropdownButtonFormField<Link>(
-              decoration: InputDecoration(
-                labelText: 'Link',
-                border: OutlineInputBorder(),
-              ),
-              value: controller.selectedLink.value,
-              items: (controller.selectedCampaign.value?.links ?? []).map((link) {
-                return DropdownMenuItem(
-                  value: link,
-                  child: Text(link.name.isEmpty ? link.shortUrl : link.name),
-                );
-              }).toList(),
-              onChanged: controller.onLinkSelected,
-            )),
+            Obx(() {
+              final selectedCampaign = controller.selectedCampaign.value;
+              final selectedLink = controller.selectedLink.value;
+              return selectedCampaign != null
+                  ? DropdownButtonFormField<analytics.Link>(
+                      value: selectedLink,
+                      decoration: const InputDecoration(
+                        labelText: 'Select Link',
+                        border: OutlineInputBorder(),
+                      ),
+                      items: selectedCampaign.links
+                          .map<DropdownMenuItem<analytics.Link>>((link) {
+                        return DropdownMenuItem<analytics.Link>(
+                          value: link,
+                          child: Text(link.name),
+                        );
+                      }).toList(),
+                      onChanged: (link) {
+                        controller.onLinkSelected(link);
+                      },
+                    )
+                  : const SizedBox();
+            }),
           ],
         ),
       ),
@@ -154,10 +171,10 @@ class AnalyticsPage extends StatelessWidget {
             ),
             SizedBox(height: 16),
             Obx(() {
-              print('Building dropdown. Portfolios: ${controller.portfolios.length}'); 
-              print('Selected portfolio: ${controller.selectedPortfolio.value?.name}'); 
+              _logger.info('Building dropdown. Portfolios: ${controller.portfolios.length}'); 
+              _logger.info('Selected portfolio: ${controller.selectedPortfolio.value?.name}'); 
               
-              return DropdownButtonFormField<Portfolio>(
+              return DropdownButtonFormField<analytics.Portfolio>(
                 value: controller.selectedPortfolio.value,
                 hint: Text('Select a portfolio'),
                 isExpanded: true,
@@ -168,7 +185,7 @@ class AnalyticsPage extends StatelessWidget {
                   );
                 }).toList(),
                 onChanged: (portfolio) {
-                  print('Dropdown onChanged: ${portfolio?.name}'); 
+                  _logger.info('Dropdown onChanged: ${portfolio?.name}'); 
                   controller.onPortfolioSelected(portfolio);
                 },
               );
@@ -220,7 +237,7 @@ class AnalyticsPage extends StatelessWidget {
               ],
             ),
             SizedBox(height: 16),
-            Container(
+            SizedBox(
               height: 300,
               child: controller.timeSeriesData.isEmpty
                   ? Center(child: Text('No timeline data available'))
@@ -300,7 +317,7 @@ class AnalyticsPage extends StatelessWidget {
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 16),
-            Container(
+            SizedBox(
               height: 300,
               child: controller.browserData.isEmpty
                   ? Center(child: Text('No browser data available'))
@@ -330,7 +347,7 @@ class AnalyticsPage extends StatelessWidget {
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 16),
-            Container(
+            SizedBox(
               height: 300,
               child: controller.osData.isEmpty
                   ? Center(child: Text('No OS data available'))
@@ -359,29 +376,19 @@ class AnalyticsPage extends StatelessWidget {
               'Device Distribution',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
-            SizedBox(height: 16),
+            SizedBox(height: 24),
             SizedBox(
-              height: 200,
-              child: PieChart(
-                PieChartData(
-                  sections: controller.deviceData,
-                  sectionsSpace: 2,
-                  centerSpaceRadius: 40,
-                ),
-              ),
-            ),
-            SizedBox(height: 16),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: controller.analyticsData
-                  .map((analytics) => analytics.device ?? 'Unknown')
-                  .toSet()
-                  .map((device) => Chip(
-                        label: Text(device),
-                        backgroundColor: Colors.blue.withOpacity(0.1),
-                      ))
-                  .toList(),
+              height: 300,
+              child: controller.deviceData.isEmpty
+                  ? Center(child: Text('No device data available'))
+                  : PieChart(
+                      PieChartData(
+                        sections: controller.deviceData,
+                        sectionsSpace: 0,
+                        centerSpaceRadius: 40,
+                        pieTouchData: PieTouchData(enabled: false),
+                      ),
+                    ),
             ),
           ],
         ),
@@ -401,7 +408,7 @@ class AnalyticsPage extends StatelessWidget {
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 16),
-            Container(
+            SizedBox(
               height: 300,
               child: controller.countryData.isEmpty
                   ? Center(child: Text('No country data available'))
@@ -431,7 +438,7 @@ class AnalyticsPage extends StatelessWidget {
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 16),
-            Container(
+            SizedBox(
               height: 300,
               child: controller.regionData.isEmpty
                   ? Center(child: Text('No region data available'))
@@ -461,7 +468,7 @@ class AnalyticsPage extends StatelessWidget {
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 16),
-            Container(
+            SizedBox(
               height: 300,
               child: controller.cityData.isEmpty
                   ? Center(child: Text('No city data available'))
@@ -506,7 +513,7 @@ class AnalyticsPage extends StatelessWidget {
                   ],
                 ),
               ],
-            )).toList(),
+            )),
           ],
         ),
       ),
