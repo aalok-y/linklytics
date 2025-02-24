@@ -2,6 +2,8 @@
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../api/api_service.dart';
+import '../controllers/campaign_controller.dart';
+import '../controllers/portfolio_controller.dart';
 // import '../views/home_page.dart';
 
 class AuthController extends GetxController {
@@ -14,6 +16,15 @@ class AuthController extends GetxController {
     super.onInit();
     loadUserSession();
   }
+
+  void _initializeControllers() {
+  if (!Get.isRegistered<CampaignController>()) {
+    Get.put(CampaignController());
+  }
+  if (!Get.isRegistered<PortfolioController>()) {
+    Get.put(PortfolioController());
+  }
+}
 
   void signUp(String name, String email, String password) async {
     isLoading(true);
@@ -36,6 +47,7 @@ class AuthController extends GetxController {
       if (response != null) {
         token.value = response;
         await saveUserSession(response);
+        _initializeControllers();
         Get.offAllNamed('/home');
       } else {
         Get.snackbar("Error", "Invalid credentials.");
@@ -72,6 +84,7 @@ class AuthController extends GetxController {
       // Update the token value regardless of navigation
       if (savedToken != null && savedToken.isNotEmpty) {
         token.value = savedToken;
+        _initializeControllers();
       }
       
       // Only attempt navigation if GetX is initialized
@@ -93,6 +106,12 @@ class AuthController extends GetxController {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('token');
     token.value = '';
+    if (Get.isRegistered<CampaignController>()) {
+  Get.delete<CampaignController>();
+}
+if (Get.isRegistered<PortfolioController>()) {
+  Get.delete<PortfolioController>();
+}
     Get.offAllNamed('/login');
   }
 }

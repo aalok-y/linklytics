@@ -356,74 +356,141 @@ class CampaignsPage extends StatelessWidget {
     
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Row(
-          children: [
-            Icon(Icons.link, color: Theme.of(context).primaryColor),
-            SizedBox(width: 8),
-            Text('Add Links to Campaign'),
-          ],
-        ),
-        content: SizedBox(
-          width: double.maxFinite,
-          child: Form(
-            key: formKey,
+      builder: (context) => Dialog(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxWidth: 500,
+            maxHeight: MediaQuery.of(context).size.height * 0.8,
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
             child: Column(
               mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                TextFormField(
-                  controller: newLinkNameController,
-                  decoration: InputDecoration(
-                    labelText: 'Link Name',
-                    hintText: 'Enter a name for your link',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.title),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Please enter a link name';
-                    }
-                    return null;
-                  },
+                // Title section with icon
+                Wrap(
+                  spacing: 8,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    Icon(Icons.link, color: Theme.of(context).primaryColor),
+                    Text(
+                      'Add Link to Campaign',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                  ],
                 ),
                 SizedBox(height: 16),
-                TextFormField(
-                  controller: newLinkController,
-                  decoration: InputDecoration(
-                    labelText: 'URL',
-                    hintText: 'Enter the URL to shorten',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.link),
-                    helperText: 'Example: https://example.com',
-                  ),
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Please enter a URL';
-                    }
-                    try {
-                      final uri = Uri.parse(value);
-                      if (!uri.hasScheme || !uri.hasAuthority) {
-                        return 'Please enter a valid URL with http:// or https://';
-                      }
-                    } catch (e) {
-                      return 'Please enter a valid URL';
-                    }
-                    return null;
-                  },
-                ),
-                SizedBox(height: 8),
-                Row(
-                  children: [
-                    Icon(Icons.info_outline, size: 16, color: Colors.grey[600]),
-                    SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        'URLs must start with http:// or https://',
-                        style: TextStyle(
-                          color: Colors.grey[600],
-                          fontSize: 12,
-                        ),
+                // Form section
+                Flexible(
+                  child: SingleChildScrollView(
+                    child: Form(
+                      key: formKey,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          TextFormField(
+                            controller: newLinkNameController,
+                            decoration: InputDecoration(
+                              labelText: 'Link Name',
+                              hintText: 'Enter a name for this link',
+                              border: OutlineInputBorder(),
+                              prefixIcon: Icon(Icons.title),
+                            ),
+                          ),
+                          SizedBox(height: 16),
+                          TextFormField(
+                            controller: newLinkController,
+                            decoration: InputDecoration(
+                              labelText: 'URL',
+                              hintText: 'Enter the URL to shorten',
+                              border: OutlineInputBorder(),
+                              prefixIcon: Icon(Icons.link),
+                            ),
+                            validator: (value) {
+                              if (value == null || value.trim().isEmpty) {
+                                return 'Please enter a URL';
+                              }
+                              try {
+                                final uri = Uri.parse(value);
+                                if (!uri.hasScheme || !uri.hasAuthority) {
+                                  return 'Please enter a valid URL with http:// or https://';
+                                }
+                              } catch (e) {
+                                return 'Please enter a valid URL';
+                              }
+                              return null;
+                            },
+                          ),
+                          SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Icon(Icons.info_outline, size: 16, color: Colors.grey[600]),
+                              SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  'URLs must start with http:// or https://',
+                                  style: TextStyle(
+                                    color: Colors.grey[600],
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
+                    ),
+                  ),
+                ),
+                SizedBox(height: 16),
+                // Actions section
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: Text('Cancel'),
+                    ),
+                    SizedBox(width: 8),
+                    ElevatedButton.icon(
+                      onPressed: () async {
+                        if (!formKey.currentState!.validate()) return;
+                        
+                        final url = newLinkController.text.trim();
+                        final name = newLinkNameController.text.trim();
+                        
+                        try {
+                          final response = await ApiService.addLinksToCampaign(
+                            campaign.id,
+                            [url],
+                            name: name,
+                          );
+                          
+                          if (response['message'] == 'Links added to campaign successfully' || response['message'] == 'Links added successfully') {
+                            Get.snackbar(
+                              'Success',
+                              'Link added successfully',
+                              snackPosition: SnackPosition.BOTTOM,
+                              backgroundColor: Colors.green[100],
+                            );
+                            await campaignController.fetchCampaigns();
+                            if (context.mounted) {
+                              Navigator.pop(context);
+                            }
+                          }
+                        } catch (e) {
+                          print('Error adding link: $e');
+                          Get.snackbar(
+                            'Error',
+                            'Failed to add link: ${e.toString()}',
+                            snackPosition: SnackPosition.BOTTOM,
+                            backgroundColor: Colors.red[100],
+                          );
+                        }
+                      },
+                      icon: Icon(Icons.add),
+                      label: Text('Add Link'),
                     ),
                   ],
                 ),
@@ -431,51 +498,6 @@ class CampaignsPage extends StatelessWidget {
             ),
           ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('Cancel'),
-          ),
-          ElevatedButton.icon(
-            onPressed: () async {
-              if (!formKey.currentState!.validate()) return;
-              
-              final url = newLinkController.text.trim();
-              final name = newLinkNameController.text.trim();
-              
-              try {
-                final response = await ApiService.addLinksToCampaign(
-                  campaign.id,
-                  [url],
-                  name: name,
-                );
-                
-                if (response['message'] == 'Links added to campaign successfully' || response['message'] == 'Links added successfully') {
-                  Get.snackbar(
-                    'Success',
-                    'Link added successfully',
-                    snackPosition: SnackPosition.BOTTOM,
-                    backgroundColor: Colors.green[100],
-                  );
-                  await campaignController.fetchCampaigns();
-                  if (context.mounted) {
-                    Navigator.pop(context);
-                  }
-                }
-              } catch (e) {
-                print('Error adding link: $e');
-                Get.snackbar(
-                  'Error',
-                  'Failed to add link: ${e.toString()}',
-                  snackPosition: SnackPosition.BOTTOM,
-                  backgroundColor: Colors.red[100],
-                );
-              }
-            },
-            icon: Icon(Icons.add),
-            label: Text('Add Link'),
-          ),
-        ],
       ),
     );
   }

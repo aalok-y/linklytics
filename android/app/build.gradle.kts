@@ -8,7 +8,7 @@ plugins {
 android {
     namespace = "com.example.linklytics"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    ndkVersion = "28.0.13004108"  // Match the installed NDK version
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
@@ -20,14 +20,11 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.example.linklytics"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = flutter.minSdkVersion
-        targetSdk = flutter.targetSdkVersion
-        versionCode = flutter.versionCode
-        versionName = flutter.versionName
+        applicationId = "com.example.linklytics" // Your unique application ID
+        minSdk = flutter.minSdkVersion // Use the Flutter version value
+        targetSdk = flutter.targetSdkVersion // Use the Flutter version value
+        versionCode = 1 // Increment this version with every release
+        versionName = "1.0.0" // The version string seen by users
     }
 
     buildTypes {
