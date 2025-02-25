@@ -29,21 +29,66 @@ class MyApp extends StatelessWidget {
   final campaignController = Get.put(CampaignController());
   final portfolioController = Get.put(PortfolioController());
 
+  Future<bool> _onWillPop() async {
+    if (Get.currentRoute == '/home' || Get.currentRoute == '/login') {
+      return true; // Allow back button to close app on home or login screen
+    } else {
+      Get.back(); // Go back to previous screen
+      return false; // Don't close the app
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return GetMaterialApp(
-      debugShowCheckedModeBanner: false,
-      initialRoute: initialRoute,
-      getPages: [
-        GetPage(name: '/login', page: () => LoginPage()),
-        GetPage(name: '/signup', page: () => SignUpPage()),
-        GetPage(name: '/home', page: () => HomePage()),
-        GetPage(name: '/create-campaign', page: () => CreateCampaignPage()),
-        GetPage(name: '/create-portfolio', page: () => CreatePortfolioPage()),
-        GetPage(name: '/campaigns', page: () => CampaignsPage()),
-        GetPage(name: '/portfolios', page: () => PortfoliosPage()),
-        GetPage(name: '/analytics', page: () => AnalyticsPage()),
-      ],
+    return WillPopScope(
+      onWillPop: _onWillPop,
+      child: GetMaterialApp(
+        debugShowCheckedModeBanner: false,
+        initialRoute: initialRoute,
+        defaultTransition: Transition.fadeIn,
+        getPages: [
+          GetPage(
+            name: '/login', 
+            page: () => LoginPage(),
+            transition: Transition.fadeIn
+          ),
+          GetPage(
+            name: '/signup', 
+            page: () => SignUpPage(),
+            transition: Transition.rightToLeft
+          ),
+          GetPage(
+            name: '/home', 
+            page: () => HomePage(),
+            transition: Transition.fadeIn
+          ),
+          GetPage(
+            name: '/create-campaign', 
+            page: () => CreateCampaignPage(),
+            transition: Transition.rightToLeft
+          ),
+          GetPage(
+            name: '/create-portfolio', 
+            page: () => CreatePortfolioPage(),
+            transition: Transition.rightToLeft
+          ),
+          GetPage(
+            name: '/campaigns', 
+            page: () => CampaignsPage(),
+            transition: Transition.rightToLeft
+          ),
+          GetPage(
+            name: '/portfolios', 
+            page: () => PortfoliosPage(),
+            transition: Transition.rightToLeft
+          ),
+          GetPage(
+            name: '/analytics', 
+            page: () => AnalyticsPage(),
+            transition: Transition.rightToLeft
+          ),
+        ],
+      ),
     );
   }
 }

@@ -12,6 +12,7 @@ class HomePage extends StatelessWidget {
   final AuthController authController = Get.find<AuthController>();
   final CampaignController campaignController = Get.find<CampaignController>();
   final homeController = Get.put(HomeController());
+  DateTime? lastBackPressTime;
 
   HomePage({super.key});
 
@@ -120,74 +121,93 @@ class HomePage extends StatelessWidget {
     );
   }
 
+  Future<bool> onWillPop() async {
+    final now = DateTime.now();
+    if (lastBackPressTime == null || 
+        now.difference(lastBackPressTime!) > const Duration(seconds: 2)) {
+      lastBackPressTime = now;
+      Get.snackbar(
+        "Exit",
+        "Press back again to exit",
+        snackPosition: SnackPosition.BOTTOM,
+        duration: const Duration(seconds: 2),
+      );
+      return false;
+    }
+    return true;
+  }
+
   @override
   Widget build(BuildContext context) {
     final bool isSmallScreen = MediaQuery.of(context).size.width < 600;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Obx(() => Text(_getPageTitle())),
-      ),
-      drawer: isSmallScreen ? _buildNavigationDrawer() : null,
-      body: Row(
-        children: [
-          if (!isSmallScreen) 
-            SizedBox(
-              width: 250,
-              child: _buildNavigationDrawer(),
-            ),
-          Expanded(
-            child: Obx(() {
-              switch (homeController.currentIndex.value) {
-                case 0:
-                  return SingleChildScrollView(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Card(
-                            child: Padding(
-                              padding: const EdgeInsets.all(16.0),
-                              child: Wrap(
-                                spacing: 16.0,
-                                runSpacing: 16.0,
-                                alignment: WrapAlignment.center,
-                                children: [
-                                  ElevatedButton.icon(
-                                    onPressed: navigateToCreateCampaign,
-                                    icon: Icon(Icons.campaign),
-                                    label: Text('Create Campaign'),
-                                    style: ElevatedButton.styleFrom(
-                                      padding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+    return WillPopScope(
+      onWillPop: onWillPop,
+      child: Scaffold(
+        appBar: AppBar(
+          title: Obx(() => Text(_getPageTitle())),
+        ),
+        drawer: isSmallScreen ? _buildNavigationDrawer() : null,
+        body: Row(
+          children: [
+            if (!isSmallScreen) 
+              SizedBox(
+                width: 250,
+                child: _buildNavigationDrawer(),
+              ),
+            Expanded(
+              child: Obx(() {
+                switch (homeController.currentIndex.value) {
+                  case 0:
+                    return SingleChildScrollView(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Card(
+                              child: Padding(
+                                padding: const EdgeInsets.all(16.0),
+                                child: Wrap(
+                                  spacing: 16.0,
+                                  runSpacing: 16.0,
+                                  alignment: WrapAlignment.center,
+                                  children: [
+                                    ElevatedButton.icon(
+                                      onPressed: navigateToCreateCampaign,
+                                      icon: Icon(Icons.campaign),
+                                      label: Text('Create Campaign'),
+                                      style: ElevatedButton.styleFrom(
+                                        padding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                                      ),
                                     ),
-                                  ),
-                                  ElevatedButton.icon(
-                                    onPressed: navigateToCreatePortfolio,
-                                    icon: Icon(Icons.work),
-                                    label: Text('Create Portfolio'),
-                                    style: ElevatedButton.styleFrom(
-                                      padding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                                    ElevatedButton.icon(
+                                      onPressed: navigateToCreatePortfolio,
+                                      icon: Icon(Icons.work),
+                                      label: Text('Create Portfolio'),
+                                      style: ElevatedButton.styleFrom(
+                                        padding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                                      ),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                  );
-                case 1:
-                  return MyLinksPage();
-                case 2:
-                  return AnalyticsPage();
-                default:
-                  return Center(child: Text('Page not found'));
-              }
-            }),
-          ),
-        ],
+                    );
+                  case 1:
+                    return MyLinksPage();
+                  case 2:
+                    return AnalyticsPage();
+                  default:
+                    return Center(child: Text('Page not found'));
+                }
+              }),
+            ),
+          ],
+        ),
       ),
     );
   }

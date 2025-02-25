@@ -222,6 +222,8 @@ class ApiService {
       final requestBody = {
         'camId': int.parse(campaignId),
         'links': urls,
+        'linkName': name,
+        if (name != null && name.isNotEmpty) 'linkName': name,
       };
       
       print('Request body: ${jsonEncode(requestBody)}');
