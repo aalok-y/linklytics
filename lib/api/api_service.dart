@@ -175,35 +175,30 @@ class ApiService {
     }
   }
 
-  static Future<Map<String, dynamic>?> getPortfolios() async {
-    final prefs = await SharedPreferences.getInstance();
-    String? token = prefs.getString('token');
-
-    if (token == null) {
-      throw Exception('Not logged in. Please log in first.');
-    }
-
+  static Future<Map<String, dynamic>> getPortfolios() async {
     try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('token');
+      
+      if (token == null) {
+        throw Exception('Not logged in. Please log in first.');
+      }
+
       final response = await http.get(
-        Uri.parse("$baseUrl/portfolio"),
+        Uri.parse('$baseUrl/portfolio'),
         headers: {
-          "Authorization": "Bearer $token",
-          "Content-Type": "application/json",
+          'Authorization': 'Bearer $token',
         },
       );
 
-      print('Portfolios API Status: ${response.statusCode}');
-      print('Portfolios API Response: ${response.body}');
-
       if (response.statusCode == 200) {
-        return jsonDecode(response.body);
+        final data = jsonDecode(response.body);
+        return data;
       } else {
-        print('Error fetching portfolios: ${response.body}');
-        return null;
+        throw Exception(jsonDecode(response.body)['error'] ?? 'Failed to fetch portfolios');
       }
     } catch (e) {
-      print('Network error fetching portfolios: $e');
-      return null;
+      throw Exception('Failed to fetch portfolios: $e');
     }
   }
 
@@ -404,6 +399,49 @@ class ApiService {
       }
     } catch (e) {
       throw Exception('Failed to update link name: $e');
+    }
+  }
+
+  static Future<Map<String, dynamic>> updatePortfolio({
+    required String portfolioId,
+    String? portName,
+    String? description,
+    String? endpoint,
+    List<Map<String, String>>? links,
+  }) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('token');
+      
+      if (token == null) {
+        throw Exception('Not logged in. Please log in first.');
+      }
+
+      final requestBody = {
+        if (portName != null) 'portName': portName,
+        if (description != null) 'description': description,
+        if (endpoint != null) 'endpoint': endpoint,
+        if (links != null) 'links': links,
+      };
+      
+      final response = await http.put(
+        Uri.parse('$baseUrl/portfolio/$portfolioId'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode(requestBody),
+      );
+
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      } else {
+        final error = jsonDecode(response.body);
+        throw Exception(error['error'] ?? error['message'] ?? 'Failed to update portfolio');
+      }
+    } catch (e) {
+      print('Error updating portfolio: $e');
+      throw Exception('Failed to update portfolio: $e');
     }
   }
 }
