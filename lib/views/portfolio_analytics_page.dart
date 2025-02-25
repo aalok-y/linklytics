@@ -56,8 +56,8 @@ class _PortfolioAnalyticsPageState extends State<PortfolioAnalyticsPage> {
 
       final response = await http.get(
         Uri.parse(widget.isPortfolioView 
-          ? 'http://localhost:8000/api/v1/portfolio/analytics/${widget.linkId}'
-          : 'http://localhost:8000/api/v1/analytics/campaign'),
+          ? 'https://linklytics-backend.onrender.com/api/v1/portfolio/analytics/${widget.linkId}'
+          : 'https://linklytics-backend.onrender.com/api/v1/analytics/campaign'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',

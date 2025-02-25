@@ -42,7 +42,7 @@ class _LinksPageState extends State<LinksPage> {
         throw Exception('Not authenticated');
       }
       final response = await http.get(
-        Uri.parse('http://localhost:8000/api/v1/portfolio'),
+        Uri.parse('https://linklytics-backend.onrender.com/api/v1/portfolio'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
@@ -73,7 +73,7 @@ class _LinksPageState extends State<LinksPage> {
         throw Exception('Not authenticated');
       }
       final response = await http.get(
-        Uri.parse('http://localhost:8000/api/v1/links'),
+        Uri.parse('https://linklytics-backend.onrender.com/api/v1/links'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',

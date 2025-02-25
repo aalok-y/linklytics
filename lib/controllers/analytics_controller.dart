@@ -16,9 +16,8 @@ class Campaign {
     return Campaign(
       id: json['campaignId'],
       name: json['campaignName'],
-      links: (json['links'] as List)
-          .map((link) => Link.fromJson(link))
-          .toList(),
+      links:
+          (json['links'] as List).map((link) => Link.fromJson(link)).toList(),
     );
   }
 }
@@ -54,19 +53,16 @@ class Portfolio {
   final String name;
   final List<Analytics> analytics;
 
-  Portfolio({
-    required this.id,
-    required this.name,
-    required this.analytics,
-  });
+  Portfolio({required this.id, required this.name, required this.analytics});
 
   factory Portfolio.fromJson(Map<String, dynamic> json) {
     return Portfolio(
       id: json['portfolioId'] as int,
       name: json['portfolioName'] as String,
-      analytics: (json['analytics'] as List? ?? [])
-          .map((a) => Analytics.fromJson(a))
-          .toList(),
+      analytics:
+          (json['analytics'] as List? ?? [])
+              .map((a) => Analytics.fromJson(a))
+              .toList(),
     );
   }
 
@@ -83,7 +79,7 @@ class Analytics {
   final String? country;
   final String? region;
   final String? city;
-  final String? device;  
+  final String? device;
   final String? browser;
   final String? os;
   final DateTime updatedAt;
@@ -113,7 +109,7 @@ class Analytics {
       country: json['country'] as String?,
       region: json['region'] as String?,
       city: json['city'] as String?,
-      device: json['deviceType'] as String?,  
+      device: json['deviceType'] as String?,
       browser: json['browser'] as String?,
       os: json['os'] as String?,
       updatedAt: DateTime.parse(json['updatedAt'] as String),
@@ -151,17 +147,18 @@ class AnalyticsController extends GetxController {
       isLoading(true);
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('token');
-      
+
       final response = await http.get(
-        Uri.parse('http://localhost:8000/api/v1/links'),
+        Uri.parse('https://linklytics-backend.onrender.com/api/v1/links'),
         headers: {'Authorization': 'Bearer $token'},
       );
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        campaigns.value = (data['campaigns'] as List)
-            .map((campaign) => Campaign.fromJson(campaign))
-            .toList();
+        campaigns.value =
+            (data['campaigns'] as List)
+                .map((campaign) => Campaign.fromJson(campaign))
+                .toList();
       }
     } catch (e) {
       Get.snackbar('Error', 'Failed to fetch campaigns');
@@ -175,9 +172,11 @@ class AnalyticsController extends GetxController {
       isLoading(true);
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('token');
-      
+
       final response = await http.get(
-        Uri.parse('http://localhost:8000/api/v1/portfolios/analytics'),
+        Uri.parse(
+          'https://linklytics-backend.onrender.com/api/v1/portfolios/analytics',
+        ),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
@@ -187,9 +186,10 @@ class AnalyticsController extends GetxController {
       print('Portfolio response status: ${response.statusCode}');
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        portfolios.value = (data['analytics'] as List)
-            .map((portfolio) => Portfolio.fromJson(portfolio))
-            .toList();
+        portfolios.value =
+            (data['analytics'] as List)
+                .map((portfolio) => Portfolio.fromJson(portfolio))
+                .toList();
         print('Fetched portfolios: ${portfolios.length}');
       } else {
         print('Failed to fetch portfolios: ${response.statusCode}');
@@ -252,17 +252,20 @@ class AnalyticsController extends GetxController {
       isLoading(true);
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('token');
-      
+
       final response = await http.get(
-        Uri.parse('http://localhost:8000/api/v1/analytics/$linkId'),
+        Uri.parse(
+          'https://linklytics-backend.onrender.com/api/v1/analytics/$linkId',
+        ),
         headers: {'Authorization': 'Bearer $token'},
       );
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        analyticsData.value = (data['analytics'] as List)
-            .map((analytics) => Analytics.fromJson(analytics))
-            .toList();
+        analyticsData.value =
+            (data['analytics'] as List)
+                .map((analytics) => Analytics.fromJson(analytics))
+                .toList();
         _processAnalyticsData();
       } else if (response.statusCode == 204) {
         analyticsData.clear();
@@ -286,15 +289,21 @@ class AnalyticsController extends GetxController {
   void _processBrowserData() {
     final browserCounts = <String, int>{};
     final osCounts = <String, int>{};
-    
+
     for (var analytics in analyticsData) {
-      var browser = analytics.browser?.trim().isEmpty == true ? 'Unknown' : (analytics.browser ?? 'Unknown');
-      var os = analytics.os?.trim().isEmpty == true ? 'Unknown' : (analytics.os ?? 'Unknown');
-      
+      var browser =
+          analytics.browser?.trim().isEmpty == true
+              ? 'Unknown'
+              : (analytics.browser ?? 'Unknown');
+      var os =
+          analytics.os?.trim().isEmpty == true
+              ? 'Unknown'
+              : (analytics.os ?? 'Unknown');
+
       browserCounts[browser] = (browserCounts[browser] ?? 0) + 1;
       osCounts[os] = (osCounts[os] ?? 0) + 1;
     }
-    
+
     browserData.value = _createPieChartData(browserCounts);
     osData.value = _createPieChartData(osCounts);
   }
@@ -302,10 +311,13 @@ class AnalyticsController extends GetxController {
   void _processDeviceData() {
     final deviceCounts = <String, int>{};
     for (var analytics in analyticsData) {
-      var device = analytics.device?.trim().isEmpty == true ? 'Unknown' : (analytics.device ?? 'Unknown');
+      var device =
+          analytics.device?.trim().isEmpty == true
+              ? 'Unknown'
+              : (analytics.device ?? 'Unknown');
       deviceCounts[device] = (deviceCounts[device] ?? 0) + 1;
     }
-    
+
     deviceData.value = _createPieChartData(deviceCounts);
   }
 
@@ -313,17 +325,26 @@ class AnalyticsController extends GetxController {
     final countryCounts = <String, int>{};
     final regionCounts = <String, int>{};
     final cityCounts = <String, int>{};
-    
+
     for (var analytics in analyticsData) {
-      var country = analytics.country?.trim().isEmpty == true ? 'Unknown' : (analytics.country ?? 'Unknown');
-      var region = analytics.region?.trim().isEmpty == true ? 'Unknown' : (analytics.region ?? 'Unknown');
-      var city = analytics.city?.trim().isEmpty == true ? 'Unknown' : (analytics.city ?? 'Unknown');
-      
+      var country =
+          analytics.country?.trim().isEmpty == true
+              ? 'Unknown'
+              : (analytics.country ?? 'Unknown');
+      var region =
+          analytics.region?.trim().isEmpty == true
+              ? 'Unknown'
+              : (analytics.region ?? 'Unknown');
+      var city =
+          analytics.city?.trim().isEmpty == true
+              ? 'Unknown'
+              : (analytics.city ?? 'Unknown');
+
       countryCounts[country] = (countryCounts[country] ?? 0) + 1;
       regionCounts[region] = (regionCounts[region] ?? 0) + 1;
       cityCounts[city] = (cityCounts[city] ?? 0) + 1;
     }
-    
+
     countryData.value = _createPieChartData(countryCounts);
     regionData.value = _createPieChartData(regionCounts);
     cityData.value = _createPieChartData(cityCounts);
@@ -335,9 +356,10 @@ class AnalyticsController extends GetxController {
       return;
     }
 
-    final sortedData = analyticsData.toList()
-      ..sort((a, b) => a.lastAccessed.compareTo(b.lastAccessed));
-    
+    final sortedData =
+        analyticsData.toList()
+          ..sort((a, b) => a.lastAccessed.compareTo(b.lastAccessed));
+
     // Group clicks by hour
     final clicksByHour = <DateTime, int>{};
     for (var analytics in sortedData) {
@@ -354,7 +376,7 @@ class AnalyticsController extends GetxController {
     final spots = <FlSpot>[];
     final startTime = sortedData.first.lastAccessed;
     final endTime = sortedData.last.lastAccessed;
-    
+
     // Fill in all hours between start and end time
     var currentHour = DateTime(
       startTime.year,
@@ -364,11 +386,11 @@ class AnalyticsController extends GetxController {
     );
 
     int index = 0;
-    while (currentHour.isBefore(endTime) || currentHour.isAtSameMomentAs(endTime)) {
-      spots.add(FlSpot(
-        index.toDouble(),
-        (clicksByHour[currentHour] ?? 0).toDouble(),
-      ));
+    while (currentHour.isBefore(endTime) ||
+        currentHour.isAtSameMomentAs(endTime)) {
+      spots.add(
+        FlSpot(index.toDouble(), (clicksByHour[currentHour] ?? 0).toDouble()),
+      );
       currentHour = currentHour.add(Duration(hours: 1));
       index++;
     }
@@ -383,7 +405,7 @@ class AnalyticsController extends GetxController {
     selectedCampaign.value = null;
     selectedLink.value = null;
     selectedPortfolio.value = null;
-    
+
     if (isPortfolio) {
       await fetchPortfolios();
       if (portfolios.isEmpty) {
@@ -413,13 +435,13 @@ class AnalyticsController extends GetxController {
     if (_usedColors.length >= _availableColors.length) {
       _usedColors.clear(); // Reset if we've used all colors
     }
-    
+
     // Find first unused color
     Color color = _availableColors.firstWhere(
       (c) => !_usedColors.contains(c),
       orElse: () => _availableColors[0],
     );
-    
+
     _usedColors.add(color);
     return color;
   }

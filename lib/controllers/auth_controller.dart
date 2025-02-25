@@ -4,9 +4,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../api/api_service.dart';
 import '../controllers/campaign_controller.dart';
 import '../controllers/portfolio_controller.dart';
-// import '../views/home_page.dart';
+import 'package:flutter/material.dart';
+import 'package:logging/logging.dart';
 
 class AuthController extends GetxController {
+  final _logger = Logger('AuthController');
   var isLoading = false.obs;
   var token = ''.obs;
   var userId = 0.obs;
@@ -42,7 +44,21 @@ class AuthController extends GetxController {
   void signIn(String email, String password) async {
     try {
       isLoading(true);
+      _logger.info('Attempting sign in for email: $email');
+      
+      if (email.isEmpty || password.isEmpty) {
+        Get.snackbar(
+          "Error",
+          "Email and password cannot be empty",
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red.withOpacity(0.1),
+          colorText: Colors.red,
+        );
+        return;
+      }
+      
       final response = await ApiService.signIn(email, password);
+      _logger.info('Sign in response received');
       
       if (response != null) {
         token.value = response;
@@ -50,10 +66,23 @@ class AuthController extends GetxController {
         _initializeControllers();
         Get.offAllNamed('/home');
       } else {
-        Get.snackbar("Error", "Invalid credentials.");
+        Get.snackbar(
+          "Error",
+          "Invalid credentials or server error",
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red.withOpacity(0.1),
+          colorText: Colors.red,
+        );
       }
     } catch (e) {
-      Get.snackbar("Error", "Login failed: ${e.toString()}");
+      _logger.severe('Sign in error: $e');
+      Get.snackbar(
+        "Error",
+        "Login failed: ${e.toString()}",
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red.withOpacity(0.1),
+        colorText: Colors.red,
+      );
     } finally {
       isLoading(false);
     }

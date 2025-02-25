@@ -94,10 +94,41 @@ class CampaignController extends GetxController {
     }
   }
 
-  void shortenLinks(String camName, String? description, List<String> links) async {
-    if (camName.isEmpty || links.isEmpty) {
-      Get.snackbar("Error", "Campaign name and at least one link are required.");
+  Future<void> shortenLinks(String camName, String? description, List<String> links) async {
+    if (camName.isEmpty) {
+      Get.snackbar("Error", "Campaign name is required");
       return;
+    }
+
+    if (links.isEmpty) {
+      Get.snackbar("Error", "Please add at least one link");
+      return;
+    }
+
+    // Validate URLs
+    for (var link in links) {
+      try {
+        final uri = Uri.parse(link);
+        if (!uri.hasScheme || (uri.scheme != 'http' && uri.scheme != 'https')) {
+          Get.snackbar(
+            "Error",
+            "Invalid URL format: $link. URLs must start with http:// or https://",
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: Colors.red.withOpacity(0.1),
+            colorText: Colors.red,
+          );
+          return;
+        }
+      } catch (e) {
+        Get.snackbar(
+          "Error",
+          "Invalid URL format: $link",
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red.withOpacity(0.1),
+          colorText: Colors.red,
+        );
+        return;
+      }
     }
 
     try {
@@ -107,14 +138,32 @@ class CampaignController extends GetxController {
       if (response != null) {
         campaignId.value = response["campaignId"].toString();
         shortLinks.assignAll(List<String>.from(response["shortLinks"]));
-        Get.snackbar("Success", "Links shortened successfully!");
+        Get.snackbar(
+          "Success",
+          "Links shortened successfully!",
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.green.withOpacity(0.1),
+          colorText: Colors.green,
+        );
         fetchCampaigns(); // Refresh the campaigns list
       } else {
-        Get.snackbar("Error", "Failed to shorten links. Please check if you're logged in and the server is running.");
+        Get.snackbar(
+          "Error",
+          "Failed to shorten links. Please check if you're logged in and the server is running.",
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red.withOpacity(0.1),
+          colorText: Colors.red,
+        );
       }
     } catch (e) {
       print('Error shortening links: $e');
-      Get.snackbar("Error", e.toString().replaceAll('Exception: ', ''));
+      Get.snackbar(
+        "Error",
+        e.toString().replaceAll('Exception: ', ''),
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red.withOpacity(0.1),
+        colorText: Colors.red,
+      );
     } finally {
       isLoading(false);
     }

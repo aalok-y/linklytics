@@ -26,8 +26,8 @@ class MyApp extends StatelessWidget {
   MyApp({required this.initialRoute});
   
   final authController = Get.put(AuthController());
-  // final campaignController = Get.put(CampaignController());
-  // final portfolioController = Get.put(PortfolioController());
+  final campaignController = Get.put(CampaignController());
+  final portfolioController = Get.put(PortfolioController());
 
   @override
   Widget build(BuildContext context) {

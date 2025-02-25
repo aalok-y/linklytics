@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
-  static const String baseUrl = "http://localhost:8000/api/v1";
+  static const String baseUrl = "https://linklytics-backend.onrender.com/api/v1";
 
   static Future<Map<String, dynamic>> createPortfolio({
     required String portName,
@@ -78,24 +78,31 @@ class ApiService {
 
   static Future<String?> signIn(String email, String password) async {
     try {
+      print('Making sign in request to: $baseUrl/auth/signin'); // Debug URL
       final response = await http.post(
         Uri.parse("$baseUrl/auth/signin"),
         headers: {"Content-Type": "application/json"},
         body: jsonEncode({"username": email, "password": password}),
       );
 
-      print('Sign In API Status: ${response.statusCode}'); // Debug log
-      print('Sign In API Response: ${response.body}'); // Debug log
+      print('Sign In API Status: ${response.statusCode}');
+      print('Sign In API Response: ${response.body}');
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        return data['token'];
+        if (data['token'] != null) {
+          return data['token'];
+        } else {
+          print('Token missing from response');
+          return null;
+        }
       } else {
-        print('Error signing in: ${response.body}');
+        print('Error signing in: Status ${response.statusCode}, Body: ${response.body}');
         return null;
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
       print('Network error signing in: $e');
+      print('Stack trace: $stackTrace');
       return null;
     }
   }
@@ -380,7 +387,7 @@ class ApiService {
       final token = prefs.getString('token');
       
       final response = await http.put(
-        Uri.parse('http://localhost:8000/api/v1/links/$linkId'),
+        Uri.parse('https://linklytics-backend.onrender.com/api/v1/links/$linkId'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',

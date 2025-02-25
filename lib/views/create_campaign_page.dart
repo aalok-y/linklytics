@@ -10,11 +10,38 @@ class CreateCampaignPage extends StatelessWidget {
   final TextEditingController linkNameController = TextEditingController();
   final RxList<Map<String, String>> links = <Map<String, String>>[].obs;
 
+  bool isValidUrl(String url) {
+    try {
+      final uri = Uri.parse(url);
+      return uri.hasScheme && (uri.scheme == 'http' || uri.scheme == 'https');
+    } catch (e) {
+      return false;
+    }
+  }
+
   void addLink() {
     if (linkController.text.isNotEmpty) {
+      String url = linkController.text.trim();
+      
+      // Add http:// if no scheme is present
+      if (!url.startsWith('http://') && !url.startsWith('https://')) {
+        url = 'https://$url';
+      }
+      
+      if (!isValidUrl(url)) {
+        Get.snackbar(
+          "Error",
+          "Please enter a valid URL (e.g., https://example.com)",
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red.withOpacity(0.1),
+          colorText: Colors.red,
+        );
+        return;
+      }
+
       links.add({
-        'url': linkController.text,
-        'name': linkNameController.text.isEmpty ? '' : linkNameController.text
+        'url': url,
+        'name': linkNameController.text.trim().isEmpty ? '' : linkNameController.text.trim()
       });
       linkController.clear();
       linkNameController.clear();
