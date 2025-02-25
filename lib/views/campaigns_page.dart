@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import '../controllers/campaign_controller.dart' as ctrl;
 import '../api/api_service.dart';
 import '../models/campaign.dart';
+import '../widgets/qr_code_dialog.dart';
 
 extension CampaignConversion on ctrl.Campaign {
   Campaign toModelCampaign() {
@@ -276,6 +277,20 @@ class CampaignsPage extends StatelessWidget {
                                                             );
                                                           },
                                                           tooltip: 'Copy Short URL',
+                                                        ),
+                                                        IconButton(
+                                                          icon: Icon(Icons.qr_code, size: 20),
+                                                          onPressed: () {
+                                                            final fullUrl = 'https://linklytics-backend.onrender.com/${link.shortUrl}';
+                                                            showDialog(
+                                                              context: context,
+                                                              builder: (context) => QRCodeDialog(
+                                                                url: fullUrl,
+                                                                title: link.linkName ?? 'Shortened Link',
+                                                              ),
+                                                            );
+                                                          },
+                                                          tooltip: 'Generate QR Code',
                                                         ),
                                                       ],
                                                     ),
