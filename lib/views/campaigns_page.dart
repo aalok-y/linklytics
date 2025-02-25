@@ -267,7 +267,8 @@ class CampaignsPage extends StatelessWidget {
                                                         IconButton(
                                                           icon: Icon(Icons.copy, size: 20),
                                                           onPressed: () {
-                                                            Clipboard.setData(ClipboardData(text: link.shortUrl));
+                                                            final fullUrl = 'https://linklytics-backend.onrender.com/${link.shortUrl}';
+                                                            Clipboard.setData(ClipboardData(text: fullUrl));
                                                             Get.snackbar(
                                                               'Copied',
                                                               'Short URL copied to clipboard',

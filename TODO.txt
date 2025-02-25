@@ -1,1 +1,2 @@
 1. Complete portfolio frontend
+2. Generate QR for shortened links
