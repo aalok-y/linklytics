@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import '../controllers/portfolio_controller.dart';
+import '../widgets/qr_code_dialog.dart';
 
 class PortfoliosPage extends StatelessWidget {
   PortfoliosPage({super.key});
@@ -60,9 +62,53 @@ class PortfoliosPage extends StatelessWidget {
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
-                              subtitle: portfolio.description != null
-                                  ? Text(portfolio.description!)
-                                  : null,
+                              subtitle: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  if (portfolio.description != null)
+                                    Text(portfolio.description!),
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          'linklytics-backend.onrender.com/p/${portfolio.endpoint}',
+                                          style: TextStyle(
+                                            color: Theme.of(context).primaryColor,
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                      ),
+                                      IconButton(
+                                        icon: Icon(Icons.copy, size: 16),
+                                        onPressed: () {
+                                          final fullUrl = 'https://linklytics-backend.onrender.com/p/${portfolio.endpoint}';
+                                          Clipboard.setData(ClipboardData(text: fullUrl));
+                                          Get.snackbar(
+                                            'Copied',
+                                            'Portfolio URL copied to clipboard',
+                                            snackPosition: SnackPosition.BOTTOM,
+                                          );
+                                        },
+                                        tooltip: 'Copy Portfolio URL',
+                                      ),
+                                      IconButton(
+                                        icon: Icon(Icons.qr_code, size: 16),
+                                        onPressed: () {
+                                          final fullUrl = 'https://linklytics-backend.onrender.com/p/${portfolio.endpoint}';
+                                          showDialog(
+                                            context: context,
+                                            builder: (context) => QRCodeDialog(
+                                              url: fullUrl,
+                                              title: portfolio.name,
+                                            ),
+                                          );
+                                        },
+                                        tooltip: 'Generate QR Code',
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
                               children: [
                                 if (portfolio.links.isNotEmpty)
                                   Padding(
