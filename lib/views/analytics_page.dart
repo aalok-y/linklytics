@@ -325,7 +325,8 @@ class AnalyticsPage extends StatelessWidget {
                       PieChartData(
                         sections: controller.browserData,
                         sectionsSpace: 2,
-                        centerSpaceRadius: 0,
+                        centerSpaceRadius: 40,
+                        pieTouchData: PieTouchData(enabled: false),
                       ),
                     ),
             ),
