@@ -10,6 +10,7 @@ import 'views/create_campaign_page.dart';
 import 'views/create_portfolio_page.dart';
 import 'views/campaigns_page.dart';
 import 'views/portfolios_page.dart';
+import 'views/otp_verification_page.dart';
 import 'controllers/auth_controller.dart';
 import 'controllers/campaign_controller.dart';
 import 'controllers/portfolio_controller.dart';
@@ -55,6 +56,11 @@ class MyApp extends StatelessWidget {
           GetPage(
             name: '/signup', 
             page: () => SignUpPage(),
+            transition: Transition.rightToLeft
+          ),
+          GetPage(
+            name: '/otp-verification',
+            page: () => OtpVerificationPage(email: Get.arguments['email']),
             transition: Transition.rightToLeft
           ),
           GetPage(

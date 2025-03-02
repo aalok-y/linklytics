@@ -3,7 +3,8 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
-  static const String baseUrl = "https://linklytics-backend.onrender.com/api/v1";
+  // static const String baseUrl = "https://linklytics-backend.onrender.com/api/v1";
+  static const String baseUrl = "http://localhost:8000/api/v1";
 
   static Future<Map<String, dynamic>> createPortfolio({
     required String portName,
@@ -76,7 +77,7 @@ class ApiService {
     }
   }
 
-  static Future<String?> signIn(String email, String password) async {
+  static Future<Map<String, dynamic>?> signIn(String email, String password) async {
     try {
       print('Making sign in request to: $baseUrl/auth/signin'); // Debug URL
       final response = await http.post(
@@ -89,13 +90,7 @@ class ApiService {
       print('Sign In API Response: ${response.body}');
 
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        if (data['token'] != null) {
-          return data['token'];
-        } else {
-          print('Token missing from response');
-          return null;
-        }
+        return jsonDecode(response.body);
       } else {
         print('Error signing in: Status ${response.statusCode}, Body: ${response.body}');
         return null;
@@ -442,6 +437,55 @@ class ApiService {
     } catch (e) {
       print('Error updating portfolio: $e');
       throw Exception('Failed to update portfolio: $e');
+    }
+  }
+
+  static Future<Map<String, dynamic>?> get(String endpoint) async {
+    try {
+      final response = await http.get(
+        Uri.parse(baseUrl + endpoint),
+        headers: {"Content-Type": "application/json"},
+      );
+
+      print('GET API Status: ${response.statusCode}');
+      print('GET API Response: ${response.body}');
+
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      } else {
+        print('Error in GET request: ${response.body}');
+        return null;
+      }
+    } catch (e) {
+      print('Network error in GET request: $e');
+      return null;
+    }
+  }
+
+  static Future<Map<String, dynamic>?> verifyOtp(String email, String otp, String userOtp) async {
+    try {
+      final response = await http.post(
+        Uri.parse("$baseUrl/verifyotp"),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({
+          "email": email,
+          "otp": otp,
+          "userotp": userOtp
+        }),
+      );
+
+      print('Verify OTP API Status: ${response.statusCode}');
+      print('Verify OTP API Response: ${response.body}');
+
+      final data = jsonDecode(response.body);
+      return {
+        'success': response.statusCode == 200,
+        'message': data['message'],
+        'statusCode': response.statusCode
+      };
+    } catch (e) {
+      print('Network error verifying OTP: $e');
+      return null;
     }
   }
 }

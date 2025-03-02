@@ -66,31 +66,88 @@ class HomePage extends StatelessWidget {
     return Drawer(
       child: Column(
         children: [
-          DrawerHeader(
+          Container(
+            padding: EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: Theme.of(Get.context!).primaryColor,
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                Text(
-                  'Linklytics',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
+            child: SafeArea(
+              bottom: false,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Linklytics',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
-                SizedBox(height: 8),
-                Text(
-                  'Link Management Made Easy',
-                  style: TextStyle(
-                    color: Colors.white70,
-                    fontSize: 14,
+                  Text(
+                    'Link Management Made Easy',
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 14,
+                    ),
                   ),
-                ),
-              ],
+                  SizedBox(height: 24),
+                  Container(
+                    padding: EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      children: [
+                        CircleAvatar(
+                          backgroundColor: Colors.white,
+                          radius: 20,
+                          child: Obx(() => Text(
+                            authController.userName.value.isNotEmpty 
+                              ? authController.userName.value[0].toUpperCase()
+                              : '?',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Theme.of(Get.context!).primaryColor,
+                            ),
+                          )),
+                        ),
+                        SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Obx(() => Text(
+                                authController.userName.value,
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              )),
+                              SizedBox(height: 2),
+                              Obx(() => Text(
+                                authController.userEmail.value,
+                                style: TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 12,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              )),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
           Expanded(
@@ -108,9 +165,7 @@ class HomePage extends StatelessWidget {
                     if (Navigator.canPop(Get.context!)) {
                       Navigator.pop(Get.context!);
                     }
-                    final prefs = await SharedPreferences.getInstance();
-                    await prefs.clear();
-                    Get.offAllNamed('/login');
+                    authController.logout();
                   },
                 ),
               ],

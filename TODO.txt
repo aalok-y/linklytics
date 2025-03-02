@@ -1,1 +1,1 @@
-1. Complete portfolio frontend
+1. All portfolios are being showed to every user
