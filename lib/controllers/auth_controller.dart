@@ -45,7 +45,19 @@ class AuthController extends GetxController {
       await sendOtp(email);
       Get.toNamed('/otp-verification', arguments: {'email': email, 'isSignup': true});
     } else {
-      Get.snackbar("Error", "Sign-up failed. Try again.");
+      Get.snackbar(
+        "Error",
+        "Sign-up failed. Try again.",
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red.withOpacity(0.1),
+        colorText: Colors.red,
+        duration: Duration(seconds: 3),
+        margin: EdgeInsets.all(10),
+        borderRadius: 8,
+        isDismissible: true,
+        overlayBlur: 0,
+        overlayColor: Colors.transparent,
+      );
     }
     isLoading(false);
   }
@@ -62,6 +74,12 @@ class AuthController extends GetxController {
           snackPosition: SnackPosition.BOTTOM,
           backgroundColor: Colors.red.withOpacity(0.1),
           colorText: Colors.red,
+          duration: Duration(seconds: 3),
+          margin: EdgeInsets.all(10),
+          borderRadius: 8,
+          isDismissible: true,
+          overlayBlur: 0,
+          overlayColor: Colors.transparent,
         );
         return;
       }
@@ -88,6 +106,12 @@ class AuthController extends GetxController {
           snackPosition: SnackPosition.BOTTOM,
           backgroundColor: Colors.red.withOpacity(0.1),
           colorText: Colors.red,
+          duration: Duration(seconds: 3),
+          margin: EdgeInsets.all(10),
+          borderRadius: 8,
+          isDismissible: true,
+          overlayBlur: 0,
+          overlayColor: Colors.transparent,
         );
       }
     } catch (e) {
@@ -98,6 +122,12 @@ class AuthController extends GetxController {
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.red.withOpacity(0.1),
         colorText: Colors.red,
+        duration: Duration(seconds: 3),
+        margin: EdgeInsets.all(10),
+        borderRadius: 8,
+        isDismissible: true,
+        overlayBlur: 0,
+        overlayColor: Colors.transparent,
       );
     } finally {
       isLoading(false);
@@ -129,6 +159,12 @@ class AuthController extends GetxController {
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.green.withOpacity(0.1),
         colorText: Colors.green,
+        duration: Duration(seconds: 3),
+        margin: EdgeInsets.all(10),
+        borderRadius: 8,
+        isDismissible: true,
+        overlayBlur: 0,
+        overlayColor: Colors.transparent,
       );
     } catch (e) {
       _logger.severe('Send OTP error: $e');
@@ -138,6 +174,12 @@ class AuthController extends GetxController {
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.red.withOpacity(0.1),
         colorText: Colors.red,
+        duration: Duration(seconds: 3),
+        margin: EdgeInsets.all(10),
+        borderRadius: 8,
+        isDismissible: true,
+        overlayBlur: 0,
+        overlayColor: Colors.transparent,
       );
     }
   }
@@ -165,6 +207,12 @@ class AuthController extends GetxController {
                 snackPosition: SnackPosition.BOTTOM,
                 backgroundColor: Colors.green.withOpacity(0.1),
                 colorText: Colors.green,
+                duration: Duration(seconds: 3),
+                margin: EdgeInsets.all(10),
+                borderRadius: 8,
+                isDismissible: true,
+                overlayBlur: 0,
+                overlayColor: Colors.transparent,
               );
               Get.offAllNamed('/login');
             } else {
@@ -194,16 +242,28 @@ class AuthController extends GetxController {
             snackPosition: SnackPosition.BOTTOM,
             backgroundColor: Colors.red.withOpacity(0.1),
             colorText: Colors.red,
+            duration: Duration(seconds: 3),
+            margin: EdgeInsets.all(10),
+            borderRadius: 8,
+            isDismissible: true,
+            overlayBlur: 0,
+            overlayColor: Colors.transparent,
           );
           otpAttempts.value = 0;
           Get.offAllNamed(isSignupFlow ? '/signup' : '/login');
         } else {
           Get.snackbar(
             "Error",
-            "Invalid OTP. ${maxOtpAttempts - otpAttempts.value} attempts remaining.",
+            "Invalid OTP. ${maxOtpAttempts - otpAttempts.value} attempts remaining",
             snackPosition: SnackPosition.BOTTOM,
             backgroundColor: Colors.red.withOpacity(0.1),
             colorText: Colors.red,
+            duration: Duration(seconds: 3),
+            margin: EdgeInsets.all(10),
+            borderRadius: 8,
+            isDismissible: true,
+            overlayBlur: 0,
+            overlayColor: Colors.transparent,
           );
         }
       }
@@ -222,6 +282,12 @@ class AuthController extends GetxController {
       snackPosition: SnackPosition.BOTTOM,
       backgroundColor: Colors.red.withOpacity(0.1),
       colorText: Colors.red,
+      duration: Duration(seconds: 3),
+      margin: EdgeInsets.all(10),
+      borderRadius: 8,
+      isDismissible: true,
+      overlayBlur: 0,
+      overlayColor: Colors.transparent,
     );
   }
 
