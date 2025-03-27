@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
+import '../utils/country_codes.dart';
 
 class PortfolioAnalyticsPage extends StatefulWidget {
   final int linkId;
@@ -66,8 +67,22 @@ class _PortfolioAnalyticsPageState extends State<PortfolioAnalyticsPage> {
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
+        final rawAnalytics = data['analytics'];
+        
+        // Convert country codes to full names in the analytics data
+        if (rawAnalytics != null && rawAnalytics is List) {
+          analytics = rawAnalytics.map((item) {
+            if (item is Map<String, dynamic> && item.containsKey('country')) {
+              return {
+                ...item,
+                'country': CountryCodes.getCountryName(item['country'] as String)
+              };
+            }
+            return item;
+          }).toList();
+        }
+        
         setState(() {
-          analytics = data['analytics'];
           isLoading = false;
         });
       } else if (response.statusCode == 204) {

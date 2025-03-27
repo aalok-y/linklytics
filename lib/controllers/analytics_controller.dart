@@ -4,6 +4,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../utils/country_codes.dart';
 
 class Campaign {
   final int id;
@@ -322,23 +323,27 @@ class AnalyticsController extends GetxController {
   }
 
   void _processLocationData() {
+    if (analyticsData.isEmpty) {
+      countryData.clear();
+      regionData.clear();
+      cityData.clear();
+      return;
+    }
+
     final countryCounts = <String, int>{};
     final regionCounts = <String, int>{};
     final cityCounts = <String, int>{};
 
-    for (var analytics in analyticsData) {
-      var country =
-          analytics.country?.trim().isEmpty == true
-              ? 'Unknown'
-              : (analytics.country ?? 'Unknown');
-      var region =
-          analytics.region?.trim().isEmpty == true
-              ? 'Unknown'
-              : (analytics.region ?? 'Unknown');
-      var city =
-          analytics.city?.trim().isEmpty == true
-              ? 'Unknown'
-              : (analytics.city ?? 'Unknown');
+    for (final analytics in analyticsData) {
+      final country = analytics.country != null && analytics.country!.isNotEmpty
+              ? CountryCodes.getCountryName(analytics.country!)
+              : 'Unknown';
+      final region = analytics.region?.isNotEmpty == true
+              ? analytics.region!
+              : 'Unknown';
+      final city = analytics.city?.isNotEmpty == true
+              ? analytics.city!
+              : 'Unknown';
 
       countryCounts[country] = (countryCounts[country] ?? 0) + 1;
       regionCounts[region] = (regionCounts[region] ?? 0) + 1;
