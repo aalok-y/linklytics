@@ -89,16 +89,16 @@ class ApiService {
       print('Sign In API Status: ${response.statusCode}');
       print('Sign In API Response: ${response.body}');
 
+      final responseData = jsonDecode(response.body);
       if (response.statusCode == 200) {
-        return jsonDecode(response.body);
+        return responseData;
       } else {
-        print('Error signing in: Status ${response.statusCode}, Body: ${response.body}');
-        return null;
+        throw Exception(responseData['message'] ?? 'Failed to sign in');
       }
     } catch (e, stackTrace) {
       print('Network error signing in: $e');
       print('Stack trace: $stackTrace');
-      return null;
+      throw Exception(e.toString());
     }
   }
 

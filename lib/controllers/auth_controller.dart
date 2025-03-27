@@ -62,7 +62,7 @@ class AuthController extends GetxController {
     isLoading(false);
   }
 
-  void signIn(String email, String password) async {
+  void signIn(String email, String password, {bool bypassOtp = false}) async {
     try {
       isLoading(true);
       _logger.info('Attempting sign in for email: $email');
@@ -89,36 +89,29 @@ class AuthController extends GetxController {
       
       if (response != null && response['token'] != null) {
         userEmail.value = email;
-        userName.value = response['user'] ?? email.split('@')[0]; // Get name from response
+        userName.value = response['user'] ?? email.split('@')[0];
         String tempToken = response['token'];
         
-        // Now initiate OTP verification
-        await sendOtp(email);
-        Get.toNamed('/otp-verification', arguments: {
-          'email': email,
-          'token': tempToken,
-          'name': userName.value
-        });
-      } else {
-        Get.snackbar(
-          "Error",
-          "Invalid credentials or User does not exist",
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.red.withOpacity(0.1),
-          colorText: Colors.red,
-          duration: Duration(seconds: 3),
-          margin: EdgeInsets.all(10),
-          borderRadius: 8,
-          isDismissible: true,
-          overlayBlur: 0,
-          overlayColor: Colors.transparent,
-        );
+        if (bypassOtp) {
+          // Skip OTP verification and directly save session
+          await saveUserSession(tempToken);
+          _initializeControllers();
+          Get.offAllNamed('/home');
+        } else {
+          // Normal flow with OTP verification
+          await sendOtp(email);
+          Get.toNamed('/otp-verification', arguments: {
+            'email': email,
+            'isSignup': false,
+            'token': tempToken,
+            'name': userName.value
+          });
+        }
       }
     } catch (e) {
-      _logger.severe('Sign in error: $e');
       Get.snackbar(
         "Error",
-        "Login failed: ${e.toString()}",
+        e.toString().replaceAll("Exception: ", ""),
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.red.withOpacity(0.1),
         colorText: Colors.red,
@@ -184,6 +177,48 @@ class AuthController extends GetxController {
     }
   }
 
+  Future<void> _showErrorDialog(String title, String message, {Color? color}) async {
+    await showDialog(
+      context: Get.context!,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(title, style: TextStyle(color: color ?? Colors.red)),
+          content: Text(message),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _showAttemptsRemainingDialog() async {
+    await showDialog(
+      context: Get.context!,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Warning", style: TextStyle(color: Colors.orange)),
+          content: Text("You have ${maxOtpAttempts - otpAttempts.value} attempts remaining."),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   void verifyOtp(String enteredOtp) async {
     try {
       isLoading(true);
@@ -201,25 +236,17 @@ class AuthController extends GetxController {
 
           if (verifyResponse != null) {
             if (verifyResponse['success']) {
-              Get.snackbar(
+              await _showErrorDialog(
                 "Success",
                 "Account verified successfully. Please log in.",
-                snackPosition: SnackPosition.BOTTOM,
-                backgroundColor: Colors.green.withOpacity(0.1),
-                colorText: Colors.green,
-                duration: Duration(seconds: 3),
-                margin: EdgeInsets.all(10),
-                borderRadius: 8,
-                isDismissible: true,
-                overlayBlur: 0,
-                overlayColor: Colors.transparent,
+                color: Colors.green
               );
               Get.offAllNamed('/login');
             } else {
-              handleOtpError(verifyResponse['message'] ?? "Verification failed");
+              await _showErrorDialog("Error", verifyResponse['message'] ?? "Verification failed");
             }
           } else {
-            handleOtpError("Network error during verification");
+            await _showErrorDialog("Error", "Network error during verification");
           }
         } else {
           // Login flow OTP verification
@@ -234,42 +261,28 @@ class AuthController extends GetxController {
           }
         }
       } else {
+        // Increment attempts first
         otpAttempts.value++;
+        
         if (otpAttempts.value >= maxOtpAttempts) {
-          Get.snackbar(
-            "Error",
-            "Maximum OTP attempts reached. Please try again.",
-            snackPosition: SnackPosition.BOTTOM,
-            backgroundColor: Colors.red.withOpacity(0.1),
-            colorText: Colors.red,
-            duration: Duration(seconds: 3),
-            margin: EdgeInsets.all(10),
-            borderRadius: 8,
-            isDismissible: true,
-            overlayBlur: 0,
-            overlayColor: Colors.transparent,
+          await _showErrorDialog(
+            "Maximum Attempts Reached",
+            "You have exceeded the maximum number of attempts. Please try again."
           );
           otpAttempts.value = 0;
           Get.offAllNamed(isSignupFlow ? '/signup' : '/login');
         } else {
-          Get.snackbar(
-            "Error",
-            "Invalid OTP. ${maxOtpAttempts - otpAttempts.value} attempts remaining",
-            snackPosition: SnackPosition.BOTTOM,
-            backgroundColor: Colors.red.withOpacity(0.1),
-            colorText: Colors.red,
-            duration: Duration(seconds: 3),
-            margin: EdgeInsets.all(10),
-            borderRadius: 8,
-            isDismissible: true,
-            overlayBlur: 0,
-            overlayColor: Colors.transparent,
+          // Show invalid OTP message first
+          await _showErrorDialog(
+            "Invalid OTP",
+            "The OTP you entered is incorrect. Please try again."
           );
+          // Then show remaining attempts
+          await _showAttemptsRemainingDialog();
         }
       }
     } catch (e) {
-      _logger.severe('OTP verification error: $e');
-      handleOtpError(e.toString());
+      await _showErrorDialog("Error", e.toString());
     } finally {
       isLoading(false);
     }

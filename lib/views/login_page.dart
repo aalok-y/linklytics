@@ -3,11 +3,61 @@ import 'package:get/get.dart';
 import '../controllers/auth_controller.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginPage extends StatelessWidget {
   final AuthController authController = Get.put(AuthController());
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+  final RxInt _tapCount = 0.obs;
+  static const String _otpBypassKey = 'otp_bypass_enabled';
+
+  Future<void> _showSecretPage(BuildContext context) async {
+    final prefs = await SharedPreferences.getInstance();
+    final isOtpBypassEnabled = prefs.getBool(_otpBypassKey) ?? false;
+    final RxBool otpBypassEnabled = isOtpBypassEnabled.obs;
+
+    return showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Secret Settings'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Bypass OTP Validation'),
+                  Obx(() => Switch(
+                    value: otpBypassEnabled.value,
+                    onChanged: (bool value) async {
+                      otpBypassEnabled.value = value;
+                      await prefs.setBool(_otpBypassKey, value);
+                    },
+                  )),
+                ],
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('Close'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _handleTap(BuildContext context) async {
+    _tapCount.value++;
+    if (_tapCount.value == 3) {
+      _tapCount.value = 0;
+      await _showSecretPage(context);
+    }
+  }
 
   Future<void> _showForgotPasswordDialog(BuildContext context) async {
     final TextEditingController resetEmailController = TextEditingController();
@@ -82,7 +132,22 @@ class LoginPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Login")),
+      appBar: AppBar(
+        title: Text("Login"),
+        actions: [
+          SizedBox(
+            width: 60,
+            height: 60,
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () => _handleTap(context),
+                child: Container(),
+              ),
+            ),
+          ),
+        ],
+      ),
       body: Padding(
         padding: EdgeInsets.all(16),
         child: Column(
@@ -100,13 +165,18 @@ class LoginPage extends StatelessWidget {
             Obx(() => authController.isLoading.value
                 ? CircularProgressIndicator()
                 : ElevatedButton(
-                    onPressed: () => authController.signIn(
-                      emailController.text,
-                      passwordController.text,
-                    ),
+                    onPressed: () async {
+                      final prefs = await SharedPreferences.getInstance();
+                      final isOtpBypassEnabled = prefs.getBool(_otpBypassKey) ?? false;
+                      authController.signIn(
+                        emailController.text,
+                        passwordController.text,
+                        bypassOtp: isOtpBypassEnabled,
+                      );
+                    },
                     child: Text("Login"),
                   )),
-            SizedBox(height: 10), 
+            SizedBox(height: 10),
             TextButton(
               onPressed: () => Get.toNamed('/signup'),
               child: Text("Don't have an account? Sign Up"),
